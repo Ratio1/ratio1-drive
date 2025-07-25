@@ -208,6 +208,35 @@ class R1FSApiClient extends BaseApiClient {
   }
 
   async uploadFileStreaming(formData: FormData): Promise<any> {
+    // Log the FormData contents before sending
+    console.log('=== R1FS Upload Request (Streaming) ===');
+    console.log('URL:', `${this.baseUrl}/add_file`);
+    console.log('Method: POST');
+    console.log('Headers:', {
+      'Authorization': 'Bearer admin'
+    });
+    
+    // Log FormData contents
+    console.log('FormData contents:');
+    const entries = Array.from(formData.entries());
+    for (const [key, value] of entries) {
+      if (value instanceof File) {
+        console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+      } else {
+        console.log(`  ${key}: ${value}`);
+      }
+    }
+    
+    // Log request body info
+    console.log('Request body: FormData with', entries.length, 'entries');
+    console.log('Request body', entries, 'entries');
+    console.log('formData', formData, 'entries');
+    console.log('====================================================');
+    console.log('====================================================');
+    console.log('====================================================');
+    console.log('Content-Type: multipart/form-data (automatically set)');
+    console.log('=====================================');
+
     const response = await this.request('/add_file', {
       method: 'POST',
       headers: {
@@ -220,6 +249,21 @@ class R1FSApiClient extends BaseApiClient {
   }
 
   async uploadFileBase64(data: { file_base64_str: string; filename?: string; secret?: string }): Promise<any> {
+    // Log the request details before sending
+    console.log('=== R1FS Upload Request (Base64) ===');
+    console.log('URL:', `${this.baseUrl}/add_file_base64`);
+    console.log('Method: POST');
+    console.log('Headers:', {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer admin'
+    });
+    console.log('Body:', {
+      filename: data.filename,
+      secret: data.secret ? '[PRESENT]' : '[NOT PRESENT]',
+      file_base64_str: `${data.file_base64_str.substring(0, 50)}... (truncated)`
+    });
+    console.log('=====================================');
+
     const response = await this.request('/add_file_base64', {
       method: 'POST',
       headers: {
@@ -233,13 +277,16 @@ class R1FSApiClient extends BaseApiClient {
   }
 
   async downloadFileStreaming(cid: string, secret?: string): Promise<Response> {
-    return this.request('/get_file', {
-      method: 'POST',
+    const queryString = this.buildQueryString({
+      cid,
+      ...(secret && { secret })
+    });
+
+    return this.request(`/get_file?${queryString}`, {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': 'Bearer admin'
       },
-      body: JSON.stringify({ cid, secret }),
     });
   }
 

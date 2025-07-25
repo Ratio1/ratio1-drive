@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { DocumentIcon, ArrowDownTrayIcon, InformationCircleIcon, CalendarIcon, ServerIcon, CpuChipIcon, StarIcon } from '@heroicons/react/24/outline';
-import { FilesData, FileItem } from '@/lib/types';
+import { FilesData, FileMetadata } from '@/lib/types';
 import { useStatus } from '@/lib/contexts/StatusContext';
 import DownloadModal from './DownloadModal';
 import StatusModal from './StatusModal';
@@ -14,12 +14,12 @@ interface FileListProps {
 }
 
 export default function FileList({ files, transferMode, onRefresh }: FileListProps) {
-  const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
+  const [selectedFile, setSelectedFile] = useState<FileMetadata | null>(null);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const { status } = useStatus();
 
-  const handleDownloadClick = (file: FileItem) => {
+  const handleDownloadClick = (file: FileMetadata) => {
     setSelectedFile(file);
     setShowDownloadModal(true);
   };

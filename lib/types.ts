@@ -4,8 +4,14 @@ export interface FileItem {
   date_uploaded: string;
 }
 
+export interface FileMetadata {
+  cid: string;
+  date_uploaded: string;
+  filename: string;
+}
+
 export interface FilesData {
-  [machine: string]: FileItem[];
+  [machine: string]: FileMetadata[];
 }
 
 // CSTORE API Response Types - Based on __get_response() method

@@ -33,16 +33,27 @@ export default function Home() {
         const data = await response.json();
         const result = data.result || {};
         
-        // Transform the response: parse stringified JSON arrays and convert CIDs to FileItems
+        // Transform the response: parse stringified JSON arrays and convert to FileMetadata
         const transformedFiles: FilesData = {};
         Object.entries(result).forEach(([machine, stringifiedArray]) => {
           try {
-            const cidArray = JSON.parse(stringifiedArray as string);
-            transformedFiles[machine] = cidArray.map((cid: string) => ({
-              cid,
-              filename: `file_${cid.substring(0, 8)}`, // placeholder filename
-              date_uploaded: new Date().toISOString() // placeholder date
-            }));
+            const parsed = JSON.parse(stringifiedArray as string);
+            // Handle both old format (string array) and new format (metadata array)
+            if (Array.isArray(parsed)) {
+              if (typeof parsed[0] === 'string') {
+                // Old format - convert to new format
+                transformedFiles[machine] = parsed.map((cid: string) => ({
+                  cid,
+                  filename: `file_${cid.substring(0, 8)}`,
+                  date_uploaded: new Date().toISOString()
+                }));
+              } else {
+                // New format - already metadata objects
+                transformedFiles[machine] = parsed;
+              }
+            } else {
+              transformedFiles[machine] = [];
+            }
           } catch (parseError) {
             console.error(`Error parsing data for machine ${machine}:`, parseError);
             transformedFiles[machine] = [];
