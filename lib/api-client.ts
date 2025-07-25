@@ -208,6 +208,25 @@ class R1FSApiClient extends BaseApiClient {
   }
 
   async uploadFileStreaming(formData: FormData): Promise<any> {
+    // Extract metadata from the original FormData
+    const file = formData.get('file') as File;
+    const filename = formData.get('filename') as string;
+    const secret = formData.get('secret') as string;
+    
+    // Create a new FormData with the correct structure
+    const uploadFormData = new FormData();
+    
+    // Add the file
+    uploadFormData.append('file', file);
+    
+    // Create body object with metadata and stringify it
+    const bodyData: any = {};
+    if (filename) bodyData.filename = filename;
+    if (secret) bodyData.secret = secret;
+    
+    // Add the stringified body as a separate field
+    uploadFormData.append('body', JSON.stringify(bodyData));
+    
     // Log the FormData contents before sending
     console.log('=== R1FS Upload Request (Streaming) ===');
     console.log('URL:', `${this.baseUrl}/add_file`);
@@ -218,7 +237,7 @@ class R1FSApiClient extends BaseApiClient {
     
     // Log FormData contents
     console.log('FormData contents:');
-    const entries = Array.from(formData.entries());
+    const entries = Array.from(uploadFormData.entries());
     for (const [key, value] of entries) {
       if (value instanceof File) {
         console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
@@ -228,13 +247,7 @@ class R1FSApiClient extends BaseApiClient {
     }
     
     // Log request body info
-    console.log('Request body: FormData with', entries.length, 'entries');
-    console.log('Request body', entries, 'entries');
-    console.log('formData', formData, 'entries');
-    console.log('====================================================');
-    console.log('====================================================');
-    console.log('====================================================');
-    console.log('Content-Type: multipart/form-data (automatically set)');
+    console.log('Stringified body:', JSON.stringify(bodyData));
     console.log('=====================================');
 
     const response = await this.request('/add_file', {
@@ -242,7 +255,7 @@ class R1FSApiClient extends BaseApiClient {
       headers: {
         'Authorization': 'Bearer admin'
       },
-      body: formData,
+      body: uploadFormData,
     });
 
     return response.json();
