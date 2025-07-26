@@ -2,7 +2,15 @@
 
 import { useState, useRef } from 'react';
 import { Dialog } from '@headlessui/react';
-import { XMarkIcon, DocumentArrowUpIcon, CheckCircleIcon, ExclamationCircleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { 
+  XMarkIcon, 
+  DocumentArrowUpIcon, 
+  CheckCircleIcon, 
+  ExclamationCircleIcon, 
+  ArrowPathIcon,
+  SparklesIcon,
+  CloudArrowUpIcon
+} from '@heroicons/react/24/outline';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -151,46 +159,59 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
 
   return (
     <Dialog open={isOpen} onClose={handleClose} className="relative z-50">
-      <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
 
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="card p-6 w-full max-w-md relative">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-br from-ratio1-500 to-purple-500 p-2 rounded-lg">
-                <DocumentArrowUpIcon className="h-6 w-6 text-white" />
+        <Dialog.Panel className="card-glass p-8 w-full max-w-lg relative transform transition-all">
+          {/* Enhanced Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="bg-gradient-to-br from-ratio1-500 via-purple-500 to-ratio1-600 p-3 rounded-xl shadow-lg">
+                  <CloudArrowUpIcon className="h-7 w-7 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
+                  <SparklesIcon className="h-2 w-2 text-white" />
+                </div>
               </div>
-              <Dialog.Title className="text-lg font-semibold text-gray-900">
-                Upload File
-              </Dialog.Title>
+              <div>
+                <Dialog.Title className="text-2xl font-bold gradient-text">
+                  Upload File
+                </Dialog.Title>
+                <p className="text-sm text-gray-600">Store your file on the decentralized network</p>
+              </div>
             </div>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-lg hover:bg-gray-100"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Transfer Mode
-              </label>
-              <div className="bg-gray-50 px-4 py-2 rounded-lg">
-                <span className="text-sm font-medium capitalize text-ratio1-600">
+          <div className="space-y-6">
+            {/* Transfer Mode Display */}
+            <div className="bg-gradient-to-r from-ratio1-50 to-purple-50 rounded-xl p-4 border border-ratio1-200">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Transfer Mode</span>
+                <span className="status-badge status-badge-info capitalize">
                   {transferMode}
                 </span>
               </div>
             </div>
 
+            {/* File Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Select File
               </label>
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-gray-300 hover:border-ratio1-400 rounded-lg p-6 text-center cursor-pointer transition-colors"
+                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300 group ${
+                  selectedFile 
+                    ? 'border-ratio1-300 bg-ratio1-50/50' 
+                    : 'border-gray-300 hover:border-ratio1-400 hover:bg-gray-50'
+                }`}
               >
                 <input
                   ref={fileInputRef}
@@ -199,50 +220,65 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
                   className="hidden"
                 />
                 {selectedFile ? (
-                  <div className="space-y-2">
-                    <DocumentArrowUpIcon className="h-8 w-8 text-ratio1-500 mx-auto" />
-                    <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
-                    <p className="text-xs text-gray-500">{formatFileSize(selectedFile.size)}</p>
+                  <div className="space-y-3">
+                    <div className="bg-gradient-to-br from-ratio1-100 to-purple-100 rounded-full p-4 w-16 h-16 mx-auto flex items-center justify-center">
+                      <DocumentArrowUpIcon className="h-8 w-8 text-ratio1-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{selectedFile.name}</p>
+                      <p className="text-xs text-gray-500 mt-1">{formatFileSize(selectedFile.size)}</p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <DocumentArrowUpIcon className="h-8 w-8 text-gray-400 mx-auto" />
-                    <p className="text-sm text-gray-600">Click to select a file</p>
+                  <div className="space-y-3">
+                    <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto flex items-center justify-center group-hover:bg-ratio1-100 transition-colors">
+                      <DocumentArrowUpIcon className="h-8 w-8 text-gray-400 group-hover:text-ratio1-600 transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Click to select a file</p>
+                      <p className="text-xs text-gray-500 mt-1">or drag and drop</p>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
 
+            {/* Secret Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Secret (Optional)
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Secret Key (Optional)
               </label>
               <input
                 type="password"
                 value={secret}
                 onChange={(e) => setSecret(e.target.value)}
-                placeholder="Enter secret key"
+                placeholder="Enter secret key for encryption"
                 className="input-field"
               />
+              <p className="text-xs text-gray-500 mt-2">
+                Leave empty for public files, or enter a secret for encrypted storage
+              </p>
             </div>
 
+            {/* Status Messages */}
             {uploadMessage && (
-              <div className={`flex items-center space-x-2 p-3 rounded-lg ${
+              <div className={`flex items-center space-x-3 p-4 rounded-xl border ${
                 uploadStatus === 'success' 
-                  ? 'bg-green-50 text-green-800' 
-                  : 'bg-red-50 text-red-800'
+                  ? 'bg-green-50 border-green-200 text-green-800' 
+                  : 'bg-red-50 border-red-200 text-red-800'
               }`}>
                 {uploadStatus === 'success' ? (
-                  <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                  <CheckCircleIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
                 ) : (
-                  <ExclamationCircleIcon className="h-5 w-5 text-red-600" />
+                  <ExclamationCircleIcon className="h-5 w-5 text-red-600 flex-shrink-0" />
                 )}
-                <span className="text-sm">{uploadMessage}</span>
+                <span className="text-sm font-medium">{uploadMessage}</span>
               </div>
             )}
           </div>
 
-          <div className="flex justify-end space-x-3 mt-6">
+          {/* Enhanced Action Buttons */}
+          <div className="flex justify-end space-x-4 mt-8">
             <button
               onClick={handleClose}
               className="btn-secondary"
@@ -253,71 +289,109 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
             <button
               onClick={handleUpload}
               disabled={!selectedFile || isUploading}
-              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
-              {isUploading ? 'Uploading...' : 'Upload'}
+              {isUploading ? (
+                <>
+                  <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                  <span>Uploading...</span>
+                </>
+              ) : (
+                <>
+                  <CloudArrowUpIcon className="h-5 w-5" />
+                  <span>Upload File</span>
+                </>
+              )}
             </button>
           </div>
 
-          {/* Loader Overlay with detailed steps */}
+          {/* Enhanced Loading Overlay */}
           {isUploading && (
-            <div className="absolute inset-0 bg-white flex flex-col items-center justify-center rounded-lg space-y-6 p-6 shadow-lg">
-              {/* Progress bar for file upload */}
-              <div className="w-full max-w-xs">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Uploading File</span>
-                  <span className="text-xs text-gray-700">{uploadProgress}%</span>
+            <div className="absolute inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl space-y-8 p-8 shadow-2xl">
+              {/* Animated Upload Icon */}
+              <div className="relative">
+                <div className="bg-gradient-to-br from-ratio1-500 to-purple-500 rounded-full p-6 animate-pulse">
+                  <CloudArrowUpIcon className="h-12 w-12 text-white" />
                 </div>
-                <div className="w-full bg-gray-200 h-2 rounded-full">
-                  <div
-                    className="bg-ratio1-500 h-2 rounded-full transition-all"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
+                <div className="absolute -top-2 -right-2 bg-yellow-400 rounded-full p-2 animate-bounce">
+                  <SparklesIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
 
-              {/* Steps list */}
-              <ul className="space-y-3 w-full max-w-xs">
-                {[
-                  { label: 'Uploading File', key: 'uploading' },
-                  { label: 'Storing to Chainstore', key: 'chainstore' },
-                  { label: 'Completed', key: 'completed' },
-                ].map((step, idx) => {
-                  const stepIndexMap: Record<string, number> = {
-                    uploading: 0,
-                    chainstore: 1,
-                    completed: 2,
-                  };
-                  const currentIndex = stepIndexMap[uploadStep];
-                  const status = idx < currentIndex
-                    ? 'done'
-                    : idx === currentIndex
-                      ? 'current'
-                      : 'pending';
-                  return (
-                    <li key={step.key} className="flex items-center space-x-2">
-                      {status === 'done' && (
-                        <CheckCircleIcon className="h-5 w-5 text-green-600" />
-                      )}
-                      {status === 'current' && (
-                        <ArrowPathIcon className="h-5 w-5 text-ratio1-500 animate-spin" />
-                      )}
-                      {status === 'pending' && (
-                        <div className="h-3 w-3 rounded-full bg-gray-300" />
-                      )}
-                      <span
-                        className={`text-sm ${status === 'done'
-                            ? 'text-green-700'
-                            : status === 'current'
-                              ? 'text-ratio1-700'
-                              : 'text-gray-500'}`}
-                      >
-                        {step.label}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
+              {/* Progress Section */}
+              <div className="w-full max-w-sm space-y-4">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Uploading to Ratio1 Drive</h3>
+                  <p className="text-sm text-gray-600">Securing your file on the decentralized network</p>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Progress</span>
+                    <span className="text-sm font-semibold text-ratio1-600">{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-ratio1-500 to-purple-500 h-3 rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Steps List */}
+                <div className="space-y-3">
+                  {[
+                    { label: 'Uploading File', key: 'uploading', icon: CloudArrowUpIcon },
+                    { label: 'Storing to Chainstore', key: 'chainstore', icon: DocumentArrowUpIcon },
+                    { label: 'Completed', key: 'completed', icon: CheckCircleIcon },
+                  ].map((step, idx) => {
+                    const stepIndexMap: Record<string, number> = {
+                      uploading: 0,
+                      chainstore: 1,
+                      completed: 2,
+                    };
+                    const currentIndex = stepIndexMap[uploadStep];
+                    const status = idx < currentIndex
+                      ? 'done'
+                      : idx === currentIndex
+                        ? 'current'
+                        : 'pending';
+                    const IconComponent = step.icon;
+                    
+                    return (
+                      <div key={step.key} className="flex items-center space-x-3 p-3 rounded-lg bg-gray-50">
+                        {status === 'done' && (
+                          <div className="bg-green-500 rounded-full p-1">
+                            <CheckCircleIcon className="h-4 w-4 text-white" />
+                          </div>
+                        )}
+                        {status === 'current' && (
+                          <div className="bg-ratio1-500 rounded-full p-1">
+                            <ArrowPathIcon className="h-4 w-4 text-white animate-spin" />
+                          </div>
+                        )}
+                        {status === 'pending' && (
+                          <div className="bg-gray-300 rounded-full p-1">
+                            <IconComponent className="h-4 w-4 text-gray-500" />
+                          </div>
+                        )}
+                        <span
+                          className={`text-sm font-medium ${
+                            status === 'done'
+                              ? 'text-green-700'
+                              : status === 'current'
+                                ? 'text-ratio1-700'
+                                : 'text-gray-500'
+                          }`}
+                        >
+                          {step.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
         </Dialog.Panel>

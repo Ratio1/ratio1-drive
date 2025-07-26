@@ -2,7 +2,16 @@
 
 import { useState } from 'react';
 import { Dialog } from '@headlessui/react';
-import { XMarkIcon, ArrowDownTrayIcon, DocumentIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { 
+  XMarkIcon, 
+  ArrowDownTrayIcon, 
+  DocumentIcon, 
+  ExclamationCircleIcon,
+  SparklesIcon,
+  CloudArrowDownIcon,
+  CalendarIcon,
+  FingerPrintIcon
+} from '@heroicons/react/24/outline';
 import { FileMetadata } from '@/lib/types';
 
 interface DownloadModalProps {
@@ -130,62 +139,82 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
 
   return (
     <Dialog open={isOpen} onClose={handleClose} className="relative z-50">
-      <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
 
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="card p-6 w-full max-w-md relative">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-br from-ratio1-500 to-purple-500 p-2 rounded-lg">
-                <ArrowDownTrayIcon className="h-6 w-6 text-white" />
+        <Dialog.Panel className="card-glass p-8 w-full max-w-lg relative transform transition-all">
+          {/* Enhanced Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="bg-gradient-to-br from-ratio1-500 via-purple-500 to-ratio1-600 p-3 rounded-xl shadow-lg">
+                  <CloudArrowDownIcon className="h-7 w-7 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
+                  <SparklesIcon className="h-2 w-2 text-white" />
+                </div>
               </div>
-              <Dialog.Title className="text-lg font-semibold text-gray-900">
-                Download File
-              </Dialog.Title>
+              <div>
+                <Dialog.Title className="text-2xl font-bold gradient-text">
+                  Download File
+                </Dialog.Title>
+                <p className="text-sm text-gray-600">Retrieve your file from the decentralized network</p>
+              </div>
             </div>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-lg hover:bg-gray-100"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
 
-          <div className="space-y-4">
-            {/* File Information */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <div className="bg-ratio1-100 p-2 rounded-lg">
-                  <DocumentIcon className="h-5 w-5 text-ratio1-600" />
+          <div className="space-y-6">
+            {/* Enhanced File Information */}
+            <div className="bg-gradient-to-r from-ratio1-50 to-purple-50 rounded-xl p-6 border border-ratio1-200">
+              <div className="flex items-start space-x-4">
+                <div className="bg-gradient-to-br from-ratio1-100 to-purple-100 p-3 rounded-xl shadow-sm">
+                  <DocumentIcon className="h-6 w-6 text-ratio1-600" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate" title={file.filename}>
-                    {file.filename}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Uploaded: {formatDate(file.date_uploaded)}
-                  </p>
-                  <p className="text-xs text-gray-400 font-mono mt-1 truncate" title={file.cid}>
-                    CID: {file.cid}
-                  </p>
+                <div className="flex-1 min-w-0 space-y-3">
+                  <div>
+                    <h4 className="font-semibold text-gray-900 truncate" title={file.filename}>
+                      {file.filename}
+                    </h4>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <CalendarIcon className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">
+                        Uploaded: {formatDate(file.date_uploaded)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200/50">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <FingerPrintIcon className="h-4 w-4 text-gray-500" />
+                      <span className="text-xs font-medium text-gray-700">Content ID</span>
+                    </div>
+                    <p className="text-xs text-gray-600 font-mono truncate" title={file.cid}>
+                      {file.cid}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Transfer Mode
-              </label>
-              <div className="bg-gray-50 px-4 py-2 rounded-lg">
-                <span className="text-sm font-medium capitalize text-ratio1-600">
+            {/* Transfer Mode Display */}
+            <div className="bg-gradient-to-r from-ratio1-50 to-purple-50 rounded-xl p-4 border border-ratio1-200">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Transfer Mode</span>
+                <span className="status-badge status-badge-info capitalize">
                   {transferMode}
                 </span>
               </div>
             </div>
 
+            {/* Secret Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Secret (Optional)
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Secret Key (Optional)
               </label>
               <input
                 type="password"
@@ -195,28 +224,30 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
                 className="input-field"
                 disabled={isDownloading}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Leave empty if the file doesn't require a secret
+              <p className="text-xs text-gray-500 mt-2">
+                Enter the secret key if this file was encrypted during upload
               </p>
             </div>
 
+            {/* Status Messages */}
             {downloadMessage && (
-              <div className={`flex items-center space-x-2 p-3 rounded-lg ${
+              <div className={`flex items-center space-x-3 p-4 rounded-xl border ${
                 downloadStatus === 'success' 
-                  ? 'bg-green-50 text-green-800' 
-                  : 'bg-red-50 text-red-800'
+                  ? 'bg-green-50 border-green-200 text-green-800' 
+                  : 'bg-red-50 border-red-200 text-red-800'
               }`}>
                 {downloadStatus === 'success' ? (
-                  <ArrowDownTrayIcon className="h-5 w-5 text-green-600" />
+                  <ArrowDownTrayIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
                 ) : (
-                  <ExclamationCircleIcon className="h-5 w-5 text-red-600" />
+                  <ExclamationCircleIcon className="h-5 w-5 text-red-600 flex-shrink-0" />
                 )}
-                <span className="text-sm">{downloadMessage}</span>
+                <span className="text-sm font-medium">{downloadMessage}</span>
               </div>
             )}
           </div>
 
-          <div className="flex justify-end space-x-3 mt-6">
+          {/* Enhanced Action Buttons */}
+          <div className="flex justify-end space-x-4 mt-8">
             <button
               onClick={handleClose}
               className="btn-secondary"
@@ -227,18 +258,44 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
             <button
               onClick={handleDownload}
               disabled={isDownloading}
-              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
-              {isDownloading ? 'Downloading...' : 'Download'}
+              {isDownloading ? (
+                <>
+                  <ArrowDownTrayIcon className="h-5 w-5 animate-spin" />
+                  <span>Downloading...</span>
+                </>
+              ) : (
+                <>
+                  <CloudArrowDownIcon className="h-5 w-5" />
+                  <span>Download File</span>
+                </>
+              )}
             </button>
           </div>
 
-          {/* Loading Overlay */}
+          {/* Enhanced Loading Overlay */}
           {isDownloading && (
-            <div className="absolute inset-0 bg-white flex items-center justify-center rounded-lg">
+            <div className="absolute inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl space-y-6 p-8 shadow-2xl">
+              {/* Animated Download Icon */}
+              <div className="relative">
+                <div className="bg-gradient-to-br from-ratio1-500 to-purple-500 rounded-full p-6 animate-pulse">
+                  <CloudArrowDownIcon className="h-12 w-12 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 bg-yellow-400 rounded-full p-2 animate-bounce">
+                  <SparklesIcon className="h-4 w-4 text-white" />
+                </div>
+              </div>
+
+              {/* Download Progress */}
               <div className="text-center space-y-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ratio1-500 mx-auto"></div>
-                <p className="text-sm text-gray-600">Downloading file...</p>
+                <h3 className="text-lg font-semibold text-gray-900">Downloading File</h3>
+                <p className="text-sm text-gray-600">Retrieving from decentralized storage</p>
+                
+                {/* Animated Progress Bar */}
+                <div className="w-64 bg-gray-200 h-2 rounded-full overflow-hidden">
+                  <div className="bg-gradient-to-r from-ratio1-500 to-purple-500 h-2 rounded-full animate-pulse" style={{ width: '100%' }} />
+                </div>
               </div>
             </div>
           )}
