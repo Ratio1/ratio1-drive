@@ -19,7 +19,7 @@ RUN npm run build
 RUN npm prune --production
 
 # Expose port
-EXPOSE 43935
+EXPOSE 8080
 
 # Set environment variables
 ENV NODE_ENV=production
