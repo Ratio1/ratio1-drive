@@ -1,21 +1,25 @@
-name: Version Check and Tag Creation
-
+name: Version Check
 on:
-  push:
-    branches: [ main ]
+  workflow_call:
+    outputs:
+      version_incremented:
+        description: "Was the version incremented?"
+        value: ${{ jobs.check.outputs.version_incremented }}
+      current_version:
+        description: "Current version"
+        value: ${{ jobs.check.outputs.current_version }}
 
 jobs:
-  version-check:
+  check:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      actions: read
-
+    outputs:
+      version_incremented: ${{ steps.version-check.outputs.version_incremented }}
+      current_version: ${{ steps.current-version.outputs.current_version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history to compare versions
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -27,98 +31,29 @@ jobs:
         run: |
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          echo "Current version: $CURRENT_VERSION"
 
       - name: Get previous version from git
         id: previous-version
         run: |
-          # Check if this is the first commit or if we can get a previous commit
           if git rev-parse HEAD~1 >/dev/null 2>&1; then
-            # Get the previous commit on main branch
             PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
-            
-            # Checkout the previous commit temporarily to get its package.json version
             git checkout $PREVIOUS_COMMIT -- package.json
             PREVIOUS_VERSION=$(node -p "require('./package.json').version")
-            
-            # Restore the current package.json
             git checkout HEAD -- package.json
-            
-            echo "previous_version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
-            echo "Previous version: $PREVIOUS_VERSION"
           else
-            # This is the first commit, so there's no previous version
-            echo "previous_version=" >> $GITHUB_OUTPUT
-            echo "Previous version: (none - first commit)"
+            PREVIOUS_VERSION=""
           fi
+          echo "previous_version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
 
       - name: Check if version was incremented
         id: version-check
         run: |
-          CURRENT_VERSION="${{ steps.current-version.outputs.current-version }}"
-          PREVIOUS_VERSION="${{ steps.previous-version.outputs.previous-version }}"
-          
-          echo "Comparing versions:"
-          echo "Previous: $PREVIOUS_VERSION"
-          echo "Current: $CURRENT_VERSION"
-          
-          # If there's no previous version, this is the first commit
+          CURRENT_VERSION="${{ steps.current-version.outputs.current_version }}"
+          PREVIOUS_VERSION="${{ steps.previous-version.outputs.previous_version }}"
           if [ -z "$PREVIOUS_VERSION" ]; then
-            echo "✅ First commit detected - creating initial tag for version $CURRENT_VERSION"
             echo "version_incremented=true" >> $GITHUB_OUTPUT
-            echo "is_initial_tag=true" >> $GITHUB_OUTPUT
+          elif [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "version_incremented=true" >> $GITHUB_OUTPUT
           else
-            # Use npm version comparison logic
-            if npm version "$CURRENT_VERSION" --allow-same-version > /dev/null 2>&1; then
-              # Check if current version is greater than previous
-              if npm version "$CURRENT_VERSION" --allow-same-version > /dev/null 2>&1 && \
-                 npm version "$PREVIOUS_VERSION" --allow-same-version > /dev/null 2>&1; then
-                # Use a simple string comparison for semantic versions
-                if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
-                  echo "✅ Version was incremented from $PREVIOUS_VERSION to $CURRENT_VERSION"
-                  echo "version_incremented=true" >> $GITHUB_OUTPUT
-                  echo "is_initial_tag=false" >> $GITHUB_OUTPUT
-                else
-                  echo "❌ Version was not incremented. Current: $CURRENT_VERSION, Previous: $PREVIOUS_VERSION"
-                  echo "version_incremented=false" >> $GITHUB_OUTPUT
-                fi
-              else
-                echo "❌ Invalid version format detected"
-                echo "version_incremented=false" >> $GITHUB_OUTPUT
-              fi
-            else
-              echo "❌ Invalid version format in package.json"
-              echo "version_incremented=false" >> $GITHUB_OUTPUT
-            fi
-          fi
-
-      - name: Create tag if version was incremented
-        if: steps.version-check.outputs.version_incremented == 'true'
-        run: |
-          CURRENT_VERSION="${{ steps.current-version.outputs.current-version }}"
-          TAG_NAME="v$CURRENT_VERSION"
-          IS_INITIAL_TAG="${{ steps.version-check.outputs.is_initial_tag }}"
-          
-          if [ "$IS_INITIAL_TAG" = "true" ]; then
-            echo "🎉 Creating initial tag: $TAG_NAME"
-          else
-            echo "Creating tag: $TAG_NAME"
-          fi
-          
-          # Create and push the tag
-          git tag $TAG_NAME
-          git push origin $TAG_NAME
-          
-          echo "✅ Tag $TAG_NAME created and pushed successfully"
-          
-          # Trigger Docker build workflow for this tag
-          echo "Triggering Docker build for tag: $TAG_NAME"
-
-      - name: Fail if version was not incremented
-        if: steps.version-check.outputs.version_incremented == 'false'
-        run: |
-          echo "❌ Version in package.json was not incremented!"
-          echo "Please increment the version in package.json before pushing to main."
-          echo "Current version: ${{ steps.current-version.outputs.current-version }}"
-          echo "Previous version: ${{ steps.previous-version.outputs.previous-version }}"
-          exit 1 
+            echo "version_incremented=false" >> $GITHUB_OUTPUT
+          fi 

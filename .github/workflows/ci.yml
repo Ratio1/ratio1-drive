@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  version-check:
+    uses: ./.github/workflows/version-check.yml
+
+  debug-outputs:
+    needs: version-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug version-check outputs
+        run: |
+          echo "=== Version Check Outputs Debug ==="
+          echo "version_incremented: '${{ needs.version-check.outputs.version_incremented }}'"
+          echo "current_version: '${{ needs.version-check.outputs.current_version }}'"
+          echo "All outputs:"
+          echo "${{ toJSON(needs.version-check.outputs) }}"
+          echo "================================"
+
+  docker-build:
+    needs: version-check
+    if: needs.version-check.outputs.version_incremented == 'true'
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      version: ${{ needs.version-check.outputs.current_version }}
+    secrets: inherit
