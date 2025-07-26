@@ -1,0 +1,104 @@
+name: Version Check and Tag Creation
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history to compare versions
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Get current version from package.json
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Get previous version from git
+        id: previous-version
+        run: |
+          # Get the previous commit on main branch
+          PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
+          
+          # Checkout the previous commit temporarily to get its package.json version
+          git checkout $PREVIOUS_COMMIT -- package.json
+          PREVIOUS_VERSION=$(node -p "require('./package.json').version")
+          
+          # Restore the current package.json
+          git checkout HEAD -- package.json
+          
+          echo "previous_version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
+          echo "Previous version: $PREVIOUS_VERSION"
+
+      - name: Check if version was incremented
+        id: version-check
+        run: |
+          CURRENT_VERSION="${{ steps.current-version.outputs.current-version }}"
+          PREVIOUS_VERSION="${{ steps.previous-version.outputs.previous-version }}"
+          
+          echo "Comparing versions:"
+          echo "Previous: $PREVIOUS_VERSION"
+          echo "Current: $CURRENT_VERSION"
+          
+          # Use npm version comparison logic
+          if npm version "$CURRENT_VERSION" --allow-same-version > /dev/null 2>&1; then
+            # Check if current version is greater than previous
+            if npm version "$CURRENT_VERSION" --allow-same-version > /dev/null 2>&1 && \
+               npm version "$PREVIOUS_VERSION" --allow-same-version > /dev/null 2>&1; then
+              # Use a simple string comparison for semantic versions
+              if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+                echo "✅ Version was incremented from $PREVIOUS_VERSION to $CURRENT_VERSION"
+                echo "version_incremented=true" >> $GITHUB_OUTPUT
+              else
+                echo "❌ Version was not incremented. Current: $CURRENT_VERSION, Previous: $PREVIOUS_VERSION"
+                echo "version_incremented=false" >> $GITHUB_OUTPUT
+              fi
+            else
+              echo "❌ Invalid version format detected"
+              echo "version_incremented=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "❌ Invalid version format in package.json"
+            echo "version_incremented=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create tag if version was incremented
+        if: steps.version-check.outputs.version_incremented == 'true'
+        run: |
+          CURRENT_VERSION="${{ steps.current-version.outputs.current-version }}"
+          TAG_NAME="v$CURRENT_VERSION"
+          
+          echo "Creating tag: $TAG_NAME"
+          
+          # Create and push the tag
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
+          
+          echo "✅ Tag $TAG_NAME created and pushed successfully"
+          
+          # Trigger Docker build workflow for this tag
+          echo "Triggering Docker build for tag: $TAG_NAME"
+
+      - name: Fail if version was not incremented
+        if: steps.version-check.outputs.version_incremented == 'false'
+        run: |
+          echo "❌ Version in package.json was not incremented!"
+          echo "Please increment the version in package.json before pushing to main."
+          echo "Current version: ${{ steps.current-version.outputs.current-version }}"
+          echo "Previous version: ${{ steps.previous-version.outputs.previous-version }}"
+          exit 1 
