@@ -140,9 +140,6 @@ class CStoreApiClient extends BaseApiClient {
     });
     const response = await this.request(`/hgetall?${queryString}`, {
       method: 'GET',
-      headers: {
-        'Authorization': 'Bearer admin'
-      }
     });
 
     return response.json();
@@ -158,7 +155,6 @@ class CStoreApiClient extends BaseApiClient {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer admin'
       }
     });
 
@@ -170,7 +166,6 @@ class CStoreApiClient extends BaseApiClient {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer admin'
       },
       body: JSON.stringify({
         hkey,
@@ -199,9 +194,6 @@ class R1FSApiClient extends BaseApiClient {
   async getStatus(): Promise<any> {
     const response = await this.request('/get_status', {
       method: 'GET',
-      headers: {
-        'Authorization': 'Bearer admin'
-      }
     });
 
     return response.json();
@@ -230,31 +222,13 @@ class R1FSApiClient extends BaseApiClient {
     // Log the FormData contents before sending
     console.log('=== R1FS Upload Request (Streaming) ===');
     console.log('URL:', `${this.baseUrl}/add_file`);
-    console.log('Method: POST');
-    console.log('Headers:', {
-      'Authorization': 'Bearer admin'
-    });
-    
-    // Log FormData contents
-    console.log('FormData contents:');
-    const entries = Array.from(uploadFormData.entries());
-    for (const [key, value] of entries) {
-      if (value instanceof File) {
-        console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
-      } else {
-        console.log(`  ${key}: ${value}`);
-      }
-    }
-    
+
     // Log request body info
     console.log('Stringified body:', JSON.stringify(bodyData));
     console.log('=====================================');
 
     const response = await this.request('/add_file', {
       method: 'POST',
-      headers: {
-        'Authorization': 'Bearer admin'
-      },
       body: uploadFormData,
     });
 
@@ -268,7 +242,6 @@ class R1FSApiClient extends BaseApiClient {
     console.log('Method: POST');
     console.log('Headers:', {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer admin'
     });
     console.log('Body:', {
       filename: data.filename,
@@ -281,7 +254,6 @@ class R1FSApiClient extends BaseApiClient {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer admin'
       },
       body: JSON.stringify(data),
     });
@@ -297,9 +269,6 @@ class R1FSApiClient extends BaseApiClient {
 
     return this.request(`/get_file?${queryString}`, {
       method: 'GET',
-      headers: {
-        'Authorization': 'Bearer admin'
-      },
     });
   }
 
@@ -308,7 +277,6 @@ class R1FSApiClient extends BaseApiClient {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer admin'
       },
       body: JSON.stringify({ cid, secret }),
     });

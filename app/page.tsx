@@ -31,9 +31,6 @@ export default function Home() {
       const CSTORE_API_URL = process.env.NEXT_PUBLIC_CSTORE_API_URL || 'http://localhost:30000';
       const response = await fetch(`${CSTORE_API_URL}/hgetall?hkey=${config.HKEY}`, {
         method: 'GET',
-        headers: {
-          'Authorization': 'Bearer admin'
-        }
       });
       if (response.ok) {
         const data = await response.json();
