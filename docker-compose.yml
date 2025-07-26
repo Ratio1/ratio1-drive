@@ -6,7 +6,7 @@ services:
     image: ratio1-drive:latest
     container_name: ratio1-drive
     ports:
-      - "8080:8080"
+      - "3333:3333"
     environment:
       - NODE_ENV=production
       - CSTORE_API_URL=http://host.docker.internal:8001
