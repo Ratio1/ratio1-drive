@@ -3,6 +3,7 @@ version: '3.8'
 services:
   ratio1-drive:
     build: .
+    image: ratio1-drive:latest
     container_name: ratio1-drive
     ports:
       - "43935:43935"
