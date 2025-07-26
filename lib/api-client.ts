@@ -238,6 +238,7 @@ class R1FSApiClient extends BaseApiClient {
   }
 
   async getStatus(): Promise<any> {
+    console.log('Fetching R1FS status...');
     const response = await this.request('/get_status', {
       method: 'GET',
     });

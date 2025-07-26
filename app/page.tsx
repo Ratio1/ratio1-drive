@@ -8,7 +8,6 @@ import UploadModal from '@/components/UploadModal';
 import UsernameModal from '@/components/UsernameModal';
 import ToastContainer from '@/components/Toast';
 import { FilesData, TransferMode } from '@/lib/types';
-import { config } from '@/lib/config';
 import { useEeId } from '@/lib/contexts/StatusContext';
 import { useUser } from '@/lib/contexts/UserContext';
 
@@ -32,43 +31,11 @@ export default function Home() {
 
   const fetchFiles = async () => {
     try {
-      const CSTORE_API_URL = process.env.NEXT_PUBLIC_CSTORE_API_URL || 'http://localhost:30000';
-      const response = await fetch(`${CSTORE_API_URL}/hgetall?hkey=${config.HKEY}`, {
+      const response = await fetch('/api/files', {
         method: 'GET',
       });
       if (response.ok) {
-        const data = await response.json();
-        const result = data.result || {};
-        
-        // Transform the response: parse stringified JSON arrays and convert to FileMetadata
-        const transformedFiles: FilesData = {};
-        Object.entries(result).forEach(([machine, stringifiedArray]) => {
-          try {
-            const parsed = JSON.parse(stringifiedArray as string);
-            // Handle both old format (string array) and new format (metadata array)
-            if (Array.isArray(parsed)) {
-              if (typeof parsed[0] === 'string') {
-                // Old format - convert to new format
-                transformedFiles[machine] = parsed.map((cid: string) => ({
-                  cid,
-                  filename: `file_${cid.substring(0, 8)}`,
-                  date_uploaded: new Date().toISOString(),
-                  owner: 'Unknown',
-                  isEncryptedWithCustomKey: false
-                }));
-              } else {
-                // New format - already metadata objects
-                transformedFiles[machine] = parsed;
-              }
-            } else {
-              transformedFiles[machine] = [];
-            }
-          } catch (parseError) {
-            console.error(`Error parsing data for machine ${machine}:`, parseError);
-            transformedFiles[machine] = [];
-          }
-        });
-        
+        const transformedFiles: FilesData = await response.json();
         setFiles(transformedFiles);
       }
     } catch (error) {
