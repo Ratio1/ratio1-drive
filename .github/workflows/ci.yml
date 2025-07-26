@@ -22,8 +22,25 @@ jobs:
           echo "${{ toJSON(needs.version-check.outputs) }}"
           echo "================================"
 
-  docker-build:
+  version-feedback:
     needs: version-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Version check feedback
+        run: |
+          if [ "${{ needs.version-check.outputs.version_incremented }}" = "true" ]; then
+            echo "✅ Version was incremented to ${{ needs.version-check.outputs.current_version }}"
+            echo "✅ Tag v${{ needs.version-check.outputs.current_version }} should have been created and pushed"
+          else
+            echo "❌ Version was NOT incremented"
+            echo "Current version: ${{ needs.version-check.outputs.current_version }}"
+            echo "Please increment the version in package.json before pushing to main"
+            echo "The version should be higher than the last tag in the repository"
+            exit 1
+          fi
+
+  docker-build:
+    needs: [version-check, version-feedback]
     if: needs.version-check.outputs.version_incremented == 'true'
     uses: ./.github/workflows/docker-build.yml
     with:
