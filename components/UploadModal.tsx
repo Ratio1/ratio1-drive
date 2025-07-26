@@ -15,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useUser } from '@/lib/contexts/UserContext';
 import { useToast } from '@/lib/contexts/ToastContext';
+import { apiService } from '@/lib/services/api-service';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -60,45 +61,19 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
         if (secret) formData.append('secret', secret);
         formData.append('owner', username);
 
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open('POST', '/api/upload');
-
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              const progress = Math.round((e.loaded / e.total) * 100);
-              setUploadProgress(progress);
-            }
-          };
-
-          xhr.onload = () => {
-            setUploadStep('chainstore');
-            try {
-              const result = JSON.parse(xhr.responseText);
-              if (xhr.status >= 200 && xhr.status < 300) {
-                setUploadStatus('success');
-                setUploadMessage('File uploaded successfully!');
-                setUploadStep('completed');
-                showToast('File uploaded successfully!', 'success');
-                setTimeout(() => {
-                  onUploadSuccess();
-                  handleClose();
-                }, 2000);
-                resolve();
-              } else {
-                reject(new Error(result.error || 'Upload failed'));
-              }
-            } catch {
-              reject(new Error('Upload failed'));
-            }
-          };
-
-          xhr.onerror = () => {
-            reject(new Error('Upload failed'));
-          };
-
-          xhr.send(formData);
+        await apiService.uploadFileWithProgress(formData, (progress) => {
+          setUploadProgress(progress);
         });
+        
+        setUploadStep('chainstore');
+        setUploadStatus('success');
+        setUploadMessage('File uploaded successfully!');
+        setUploadStep('completed');
+        showToast('File uploaded successfully!', 'success');
+        setTimeout(() => {
+          onUploadSuccess();
+          handleClose();
+        }, 2000);
       } else {
         // Base64 mode
         const reader = new FileReader();
@@ -110,36 +85,23 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
           reader.readAsDataURL(selectedFile);
         });
 
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            file_base64_str: fileBase64,
-            filename: selectedFile.name,
-            secret: secret || undefined,
-            owner: username,
-          }),
+        await apiService.uploadFileBase64({
+          file_base64_str: fileBase64,
+          filename: selectedFile.name,
+          secret: secret || undefined,
+          owner: username,
         });
 
         setUploadProgress(100);
-
-        const result = await response.json();
         setUploadStep('chainstore');
-
-        if (response.ok) {
-          setUploadStatus('success');
-          setUploadMessage('File uploaded successfully!');
-          setUploadStep('completed');
-          showToast('File uploaded successfully!', 'success');
-          setTimeout(() => {
-            onUploadSuccess();
-            handleClose();
-          }, 2000);
-        } else {
-          throw new Error(result.error || 'Upload failed');
-        }
+        setUploadStatus('success');
+        setUploadMessage('File uploaded successfully!');
+        setUploadStep('completed');
+        showToast('File uploaded successfully!', 'success');
+        setTimeout(() => {
+          onUploadSuccess();
+          handleClose();
+        }, 2000);
       }
 
     } catch (error) {

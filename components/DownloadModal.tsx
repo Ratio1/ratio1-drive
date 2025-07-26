@@ -21,6 +21,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { FileMetadata } from '@/lib/types';
 import { useToast } from '@/lib/contexts/ToastContext';
+import { apiService } from '@/lib/services/api-service';
 
 interface DownloadModalProps {
   isOpen: boolean;
@@ -54,23 +55,8 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
 
     try {
       if (transferMode === 'streaming') {
-        // For streaming mode, use GET request with query parameters
-        const params = new URLSearchParams({
-          cid: file.cid,
-          mode: 'streaming',
-        });
-        if (secret) {
-          params.append('secret', secret);
-        }
-
-        const response = await fetch(`/api/download?${params.toString()}`, {
-          method: 'GET',
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Download failed');
-        }
+        // For streaming mode, use the API service
+        const response = await apiService.downloadFileStreaming(file.cid, secret);
 
         // Create a blob from the response and trigger download
         const blob = await response.blob();
@@ -89,25 +75,8 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
           handleClose();
         }, 2000);
       } else {
-        // For base64 mode, get the file data and trigger download
-        const response = await fetch('/api/download', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            cid: file.cid,
-            secret: secret || undefined,
-            mode: 'base64',
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Download failed');
-        }
-
-        const result = await response.json();
+        // For base64 mode, use the API service
+        const result = await apiService.downloadFileBase64(file.cid, secret);
         
         // Convert base64 to blob and trigger download
         const binaryString = atob(result.file_base64_str);

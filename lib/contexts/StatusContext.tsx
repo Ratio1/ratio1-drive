@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { apiService } from '@/lib/services/api-service';
 
 interface StatusData {
   [key: string]: any;
@@ -31,11 +32,7 @@ export function StatusProvider({ children }: StatusProviderProps) {
     setError(null);
 
     try {
-      const response = await fetch('/api/status');
-      if (!response.ok) {
-        throw new Error('Failed to fetch status');
-      }
-      const data = await response.json();
+      const data = await apiService.getStatus();
       setStatus(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch status');

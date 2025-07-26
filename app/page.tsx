@@ -10,6 +10,7 @@ import ToastContainer from '@/components/Toast';
 import { FilesData, TransferMode } from '@/lib/types';
 import { useEeId } from '@/lib/contexts/StatusContext';
 import { useUser } from '@/lib/contexts/UserContext';
+import { apiService } from '@/lib/services/api-service';
 
 export default function Home() {
   const [files, setFiles] = useState<FilesData>({});
@@ -31,13 +32,8 @@ export default function Home() {
 
   const fetchFiles = async () => {
     try {
-      const response = await fetch('/api/files', {
-        method: 'GET',
-      });
-      if (response.ok) {
-        const transformedFiles: FilesData = await response.json();
-        setFiles(transformedFiles);
-      }
+      const transformedFiles = await apiService.getFiles();
+      setFiles(transformedFiles);
     } catch (error) {
       console.error('Error fetching files:', error);
     } finally {
