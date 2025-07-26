@@ -8,6 +8,8 @@ export interface FileMetadata {
   cid: string;
   date_uploaded: string;
   filename: string;
+  owner: string;
+  isEncryptedWithCustomKey: boolean;
 }
 
 export interface FilesData {

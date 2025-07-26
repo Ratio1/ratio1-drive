@@ -10,9 +10,17 @@ import {
   SparklesIcon,
   CloudArrowDownIcon,
   CalendarIcon,
-  FingerPrintIcon
+  FingerPrintIcon,
+  ClipboardDocumentIcon,
+  CheckIcon,
+  UserIcon,
+  LockClosedIcon,
+  LockOpenIcon,
+  EyeIcon,
+  EyeSlashIcon
 } from '@heroicons/react/24/outline';
 import { FileMetadata } from '@/lib/types';
+import { useToast } from '@/lib/contexts/ToastContext';
 
 interface DownloadModalProps {
   isOpen: boolean;
@@ -26,11 +34,23 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [downloadMessage, setDownloadMessage] = useState('');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const { showToast } = useToast();
 
   const handleDownload = async () => {
+    // Check if file requires custom key but no secret provided
+    if (file.isEncryptedWithCustomKey && !secret.trim()) {
+      showToast('This file is encrypted with a custom key. Please enter the secret key to download.', 'error');
+      setHasError(true);
+      return;
+    }
+
     setIsDownloading(true);
     setDownloadStatus('idle');
     setDownloadMessage('');
+    setHasError(false);
 
     try {
       if (transferMode === 'streaming') {
@@ -113,7 +133,17 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
       }
     } catch (error) {
       setDownloadStatus('error');
-      setDownloadMessage(error instanceof Error ? error.message : 'Download failed');
+      setHasError(true);
+      // Check if it's a decryption error
+      const errorMessage = error instanceof Error ? error.message : 'Download failed';
+      if (errorMessage.includes('decrypt') || errorMessage.includes('key') || errorMessage.includes('secret') || errorMessage.includes('Not Found')) {
+        const wrongKeyMessage = 'Secret key might be wrong. Please check and try again.';
+        setDownloadMessage(wrongKeyMessage);
+        showToast(wrongKeyMessage, 'error');
+      } else {
+        setDownloadMessage(errorMessage);
+        showToast(errorMessage, 'error');
+      }
     } finally {
       setIsDownloading(false);
     }
@@ -124,7 +154,21 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
     setDownloadStatus('idle');
     setDownloadMessage('');
     setIsDownloading(false);
+    setCopiedField(null);
+    setShowPassword(false);
+    setHasError(false);
     onClose();
+  };
+
+  // Copy to clipboard function
+  const copyToClipboard = async (text: string, fieldName: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(fieldName);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -188,10 +232,63 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
                       </span>
                     </div>
                   </div>
+                  
+                  {/* Owner Information */}
                   <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200/50">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <FingerPrintIcon className="h-4 w-4 text-gray-500" />
-                      <span className="text-xs font-medium text-gray-700">Content ID</span>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center space-x-2">
+                        <UserIcon className="h-4 w-4 text-blue-500" />
+                        <span className="text-xs font-medium text-gray-700">Owner</span>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(file.owner, 'owner')}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                        title="Copy Owner"
+                      >
+                        {copiedField === 'owner' ? (
+                          <CheckIcon className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <ClipboardDocumentIcon className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-600 font-medium">{file.owner}</p>
+                  </div>
+
+                  {/* Encryption Status */}
+                  <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200/50">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center space-x-2">
+                        {file.isEncryptedWithCustomKey ? (
+                          <LockClosedIcon className="h-4 w-4 text-red-500" />
+                        ) : (
+                          <LockOpenIcon className="h-4 w-4 text-green-500" />
+                        )}
+                        <span className="text-xs font-medium text-gray-700">Encryption</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-600 font-medium">
+                      {file.isEncryptedWithCustomKey ? 'Custom Key Required' : 'Public File'}
+                    </p>
+                  </div>
+
+                  <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200/50">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center space-x-2">
+                        <FingerPrintIcon className="h-4 w-4 text-gray-500" />
+                        <span className="text-xs font-medium text-gray-700">Content ID</span>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(file.cid, 'contentId')}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                        title="Copy Content ID"
+                      >
+                        {copiedField === 'contentId' ? (
+                          <CheckIcon className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <ClipboardDocumentIcon className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+                        )}
+                      </button>
                     </div>
                     <p className="text-xs text-gray-600 font-mono truncate" title={file.cid}>
                       {file.cid}
@@ -211,22 +308,45 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
               </div>
             </div>
 
-            {/* Secret Input */}
+            {/* Secret Input with Eye Icon */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Secret Key (Optional)
+                Secret Key {file.isEncryptedWithCustomKey && <span className="text-red-500">*</span>}
               </label>
-              <input
-                type="password"
-                value={secret}
-                onChange={(e) => setSecret(e.target.value)}
-                placeholder="Enter secret key if required"
-                className="input-field"
-                disabled={isDownloading}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={secret}
+                  onChange={(e) => setSecret(e.target.value)}
+                  placeholder={file.isEncryptedWithCustomKey ? "Enter secret key (required)" : "Enter secret key if required"}
+                  className={`input-field pr-12 ${hasError ? 'border-red-300 focus:border-red-500' : ''}`}
+                  disabled={isDownloading}
+                  required={file.isEncryptedWithCustomKey}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  disabled={isDownloading}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
               <p className="text-xs text-gray-500 mt-2">
-                Enter the secret key if this file was encrypted during upload
+                {file.isEncryptedWithCustomKey 
+                  ? 'This file is encrypted. You must enter the correct secret key to download.'
+                  : 'Enter the secret key if this file was encrypted during upload'
+                }
               </p>
+              {hasError && (
+                <p className="text-xs text-red-600 mt-2 font-medium">
+                  💡 Tip: If download fails, the secret key might be incorrect. Please double-check and try again.
+                </p>
+              )}
             </div>
 
             {/* Status Messages */}
@@ -237,7 +357,7 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
                   : 'bg-red-50 border-red-200 text-red-800'
               }`}>
                 {downloadStatus === 'success' ? (
-                  <ArrowDownTrayIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <CheckIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
                 ) : (
                   <ExclamationCircleIcon className="h-5 w-5 text-red-600 flex-shrink-0" />
                 )}
@@ -257,7 +377,7 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
             </button>
             <button
               onClick={handleDownload}
-              disabled={isDownloading}
+              disabled={isDownloading || (file.isEncryptedWithCustomKey && !secret.trim())}
               className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
               {isDownloading ? (

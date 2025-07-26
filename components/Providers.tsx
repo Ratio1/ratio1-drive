@@ -1,6 +1,8 @@
 'use client';
 
 import { StatusProvider } from '@/lib/contexts/StatusContext';
+import { UserProvider } from '@/lib/contexts/UserContext';
+import { ToastProvider } from '@/lib/contexts/ToastContext';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -8,8 +10,12 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <StatusProvider>
-      {children}
-    </StatusProvider>
+    <ToastProvider>
+      <UserProvider>
+        <StatusProvider>
+          {children}
+        </StatusProvider>
+      </UserProvider>
+    </ToastProvider>
   );
 } 

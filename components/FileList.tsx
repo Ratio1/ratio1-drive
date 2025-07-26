@@ -15,7 +15,10 @@ import {
   CogIcon,
   ClipboardDocumentIcon,
   CheckIcon,
-  ArrowPathRoundedSquareIcon
+  ArrowPathRoundedSquareIcon,
+  UserIcon,
+  LockClosedIcon,
+  LockOpenIcon
 } from '@heroicons/react/24/outline';
 import { FilesData, FileMetadata } from '@/lib/types';
 import { useStatus } from '@/lib/contexts/StatusContext';
@@ -340,6 +343,27 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
                       <div className="flex items-center space-x-2 text-sm text-gray-500">
                         <CalendarIcon className="h-4 w-4" />
                         <span>{formatDate(file.date_uploaded)}</span>
+                      </div>
+
+                      {/* Owner Information */}
+                      <div className="flex items-center space-x-2 text-sm">
+                        <UserIcon className="h-4 w-4 text-blue-500" />
+                        <span className="text-gray-600 font-medium">{file.owner}</span>
+                      </div>
+
+                      {/* Encryption Status */}
+                      <div className="flex items-center space-x-2 text-sm">
+                        {file.isEncryptedWithCustomKey ? (
+                          <>
+                            <LockClosedIcon className="h-4 w-4 text-red-500" />
+                            <span className="text-red-600 font-medium">Encrypted</span>
+                          </>
+                        ) : (
+                          <>
+                            <LockOpenIcon className="h-4 w-4 text-green-500" />
+                            <span className="text-green-600 font-medium">Public</span>
+                          </>
+                        )}
                       </div>
                       
                       <div className="bg-gray-50 rounded-lg p-2">

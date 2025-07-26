@@ -8,13 +8,16 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get('content-type');
     let uploadResult;
     let filename = '';
+    let owner = '';
+    let secret = '';
     
     if (contentType?.includes('multipart/form-data')) {
       // Streaming upload
       const formData = await request.formData();
       const file = formData.get('file') as File;
       filename = formData.get('filename') as string || file?.name || 'unknown';
-      const secret = formData.get('secret') as string;
+      secret = formData.get('secret') as string;
+      owner = formData.get('owner') as string;
       
       // Create a new FormData with the secret included
       const uploadFormData = new FormData();
@@ -27,6 +30,8 @@ export async function POST(request: NextRequest) {
       // Base64 upload
       const data = await request.json();
       filename = data.filename || 'unknown';
+      secret = data.secret || '';
+      owner = data.owner || '';
       uploadResult = await ApiClient.uploadFileBase64(data);
     }
 
@@ -61,7 +66,9 @@ export async function POST(request: NextRequest) {
               metadataArray = parsed.map((cid: string) => ({
                 cid,
                 filename: `file_${cid.substring(0, 8)}`,
-                date_uploaded: new Date().toISOString()
+                date_uploaded: new Date().toISOString(),
+                owner: 'Unknown',
+                isEncryptedWithCustomKey: false
               }));
             } else {
               // New format - already metadata objects
@@ -79,7 +86,9 @@ export async function POST(request: NextRequest) {
       const newMetadata: FileMetadata = {
         cid,
         filename,
-        date_uploaded: new Date().toISOString()
+        date_uploaded: new Date().toISOString(),
+        owner: owner || 'Unknown',
+        isEncryptedWithCustomKey: !!(secret && secret.trim())
       };
 
       // Add new metadata to array if CID is not already there

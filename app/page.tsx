@@ -5,9 +5,12 @@ import { PlusIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import Header from '@/components/Header';
 import FileList from '@/components/FileList';
 import UploadModal from '@/components/UploadModal';
+import UsernameModal from '@/components/UsernameModal';
+import ToastContainer from '@/components/Toast';
 import { FilesData, TransferMode } from '@/lib/types';
 import { config } from '@/lib/config';
 import { useEeId } from '@/lib/contexts/StatusContext';
+import { useUser } from '@/lib/contexts/UserContext';
 
 export default function Home() {
   const [files, setFiles] = useState<FilesData>({});
@@ -15,6 +18,7 @@ export default function Home() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const eeId = useEeId();
+  const { username, isUserSet, setUsername } = useUser();
 
   useEffect(() => {
     // Only fetch files in the browser, not during build
@@ -48,7 +52,9 @@ export default function Home() {
                 transformedFiles[machine] = parsed.map((cid: string) => ({
                   cid,
                   filename: `file_${cid.substring(0, 8)}`,
-                  date_uploaded: new Date().toISOString()
+                  date_uploaded: new Date().toISOString(),
+                  owner: 'Unknown',
+                  isEncryptedWithCustomKey: false
                 }));
               } else {
                 // New format - already metadata objects
@@ -76,15 +82,46 @@ export default function Home() {
     fetchFiles();
   };
 
+  const handleUsernameSet = (newUsername: string) => {
+    setUsername(newUsername);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-ratio1-50 via-purple-50 to-ratio1-100">
         <div className="text-center">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-ratio1-200 border-t-ratio1-600 mx-auto mb-4"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-purple-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          {/* Clean Loading Animation */}
+          <div className="flex flex-col items-center justify-center">
+            {/* Main Spinner */}
+            <div className="relative mb-8 flex justify-center">
+              <div className="w-20 h-20 border-4 border-ratio1-200 border-t-ratio1-600 rounded-full animate-spin"></div>
+              <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-purple-500 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+            </div>
+            
+            {/* Logo/Brand */}
+            <div className="mb-6 flex justify-center">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-ratio1-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <SparklesIcon className="h-5 w-5 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-ratio1-600 to-purple-600 bg-clip-text text-transparent">
+                  Ratio1 Drive
+                </h1>
+              </div>
+            </div>
+            
+            {/* Loading Text */}
+            <p className="text-gray-600 font-medium text-lg text-center">
+              Loading your decentralized storage
+            </p>
+            
+            {/* Animated Dots */}
+            <div className="flex justify-center space-x-1 mt-4">
+              <div className="w-2 h-2 bg-ratio1-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+              <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-2 h-2 bg-ratio1-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+            </div>
           </div>
-          <p className="text-gray-600 font-medium">Loading Ratio1 Drive...</p>
         </div>
       </div>
     );
@@ -96,6 +133,7 @@ export default function Home() {
         transferMode={transferMode}
         onTransferModeChange={setTransferMode}
         eeId={eeId}
+        username={username}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -106,6 +144,7 @@ export default function Home() {
               <button
                 onClick={() => setShowUploadModal(true)}
                 className="btn-primary flex items-center space-x-3 text-lg px-8 py-4"
+                disabled={!isUserSet}
               >
                 <div className="relative">
                   <PlusIcon className="h-6 w-6" />
@@ -156,6 +195,13 @@ export default function Home() {
           transferMode={transferMode}
           onUploadSuccess={handleUploadSuccess}
         />
+
+        {/* Username Modal */}
+        <UsernameModal
+          isOpen={!isUserSet}
+          onClose={() => {}} // Cannot close without setting username
+          onUsernameSet={handleUsernameSet}
+        />
       </main>
 
       {/* Enhanced Footer */}
@@ -174,6 +220,9 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Toast Container */}
+      <ToastContainer />
     </div>
   );
 }

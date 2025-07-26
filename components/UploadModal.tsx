@@ -9,8 +9,12 @@ import {
   ExclamationCircleIcon, 
   ArrowPathIcon,
   SparklesIcon,
-  CloudArrowUpIcon
+  CloudArrowUpIcon,
+  EyeIcon,
+  EyeSlashIcon
 } from '@heroicons/react/24/outline';
+import { useUser } from '@/lib/contexts/UserContext';
+import { useToast } from '@/lib/contexts/ToastContext';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -27,7 +31,10 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
   const [uploadMessage, setUploadMessage] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStep, setUploadStep] = useState<'idle' | 'uploading' | 'chainstore' | 'completed'>('idle');
+  const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { username } = useUser();
+  const { showToast } = useToast();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -38,7 +45,7 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !username) return;
 
     setIsUploading(true);
     setUploadStatus('idle');
@@ -51,6 +58,7 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
         formData.append('file', selectedFile);
         if (selectedFile.name) formData.append('filename', selectedFile.name);
         if (secret) formData.append('secret', secret);
+        formData.append('owner', username);
 
         await new Promise<void>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
@@ -71,6 +79,7 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
                 setUploadStatus('success');
                 setUploadMessage('File uploaded successfully!');
                 setUploadStep('completed');
+                showToast('File uploaded successfully!', 'success');
                 setTimeout(() => {
                   onUploadSuccess();
                   handleClose();
@@ -110,6 +119,7 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
             file_base64_str: fileBase64,
             filename: selectedFile.name,
             secret: secret || undefined,
+            owner: username,
           }),
         });
 
@@ -122,6 +132,7 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
           setUploadStatus('success');
           setUploadMessage('File uploaded successfully!');
           setUploadStep('completed');
+          showToast('File uploaded successfully!', 'success');
           setTimeout(() => {
             onUploadSuccess();
             handleClose();
@@ -133,7 +144,9 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
 
     } catch (error) {
       setUploadStatus('error');
-      setUploadMessage(error instanceof Error ? error.message : 'Upload failed');
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      setUploadMessage(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setIsUploading(false);
     }
@@ -145,6 +158,7 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
     setUploadStatus('idle');
     setUploadMessage('');
     setIsUploading(false);
+    setShowPassword(false);
     onClose();
     setUploadStep('idle');
   };
@@ -156,6 +170,21 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
+
+  // Show owner information
+  const showOwnerInfo = () => (
+    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+      <div className="flex items-center space-x-3">
+        <div className="bg-green-100 rounded-full p-2">
+          <DocumentArrowUpIcon className="h-4 w-4 text-green-600" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-green-800">File Owner</p>
+          <p className="text-sm text-green-600">{username}</p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <Dialog open={isOpen} onClose={handleClose} className="relative z-50">
@@ -190,6 +219,9 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
           </div>
 
           <div className="space-y-6">
+            {/* Owner Information */}
+            {showOwnerInfo()}
+
             {/* Transfer Mode Display */}
             <div className="bg-gradient-to-r from-ratio1-50 to-purple-50 rounded-xl p-4 border border-ratio1-200">
               <div className="flex items-center justify-between">
@@ -243,18 +275,33 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
               </div>
             </div>
 
-            {/* Secret Input */}
+            {/* Secret Input with Eye Icon */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">
                 Secret Key (Optional)
               </label>
-              <input
-                type="password"
-                value={secret}
-                onChange={(e) => setSecret(e.target.value)}
-                placeholder="Enter secret key for encryption"
-                className="input-field"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={secret}
+                  onChange={(e) => setSecret(e.target.value)}
+                  placeholder="Enter secret key for encryption"
+                  className="input-field pr-12"
+                  disabled={isUploading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  disabled={isUploading}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
               <p className="text-xs text-gray-500 mt-2">
                 Leave empty for public files, or enter a secret for encrypted storage
               </p>
@@ -288,7 +335,7 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
             </button>
             <button
               onClick={handleUpload}
-              disabled={!selectedFile || isUploading}
+              disabled={!selectedFile || isUploading || !username}
               className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
               {isUploading ? (

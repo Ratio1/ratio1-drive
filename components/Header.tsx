@@ -1,17 +1,20 @@
 'use client';
 
 import { Switch } from '@headlessui/react';
-import { CloudIcon, CogIcon, CurrencyDollarIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { CloudIcon, CogIcon, CurrencyDollarIcon, SparklesIcon, UserIcon } from '@heroicons/react/24/outline';
 import { useStatus } from '@/lib/contexts/StatusContext';
+import { useToast } from '@/lib/contexts/ToastContext';
 
 interface HeaderProps {
   transferMode: 'streaming' | 'base64';
   onTransferModeChange: (mode: 'streaming' | 'base64') => void;
   eeId?: string;
+  username?: string | null;
 }
 
-export default function Header({ transferMode, onTransferModeChange, eeId }: HeaderProps) {
+export default function Header({ transferMode, onTransferModeChange, eeId, username }: HeaderProps) {
   const { status } = useStatus();
+  const { showToast } = useToast();
   
   // Extract ETH address from status data
   const getEthAddress = () => {
@@ -41,6 +44,15 @@ export default function Header({ transferMode, onTransferModeChange, eeId }: Hea
                   Ratio1 Drive
                 </h1>
                 <div className="flex items-center space-x-4 mt-1">
+                  {username && (
+                    <div className="flex items-center space-x-2">
+                      <UserIcon className="h-4 w-4 text-blue-500" />
+                      <span className="text-sm text-gray-600">User:</span>
+                      <span className="text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                        {username}
+                      </span>
+                    </div>
+                  )}
                   {eeId && (
                     <p className="text-sm text-gray-600 flex items-center">
                       <CogIcon className="h-4 w-4 mr-1" />
@@ -102,6 +114,7 @@ export default function Header({ transferMode, onTransferModeChange, eeId }: Hea
                 {status ? 'Connected' : 'Disconnected'}
               </span>
             </div>
+
           </div>
         </div>
       </div>
