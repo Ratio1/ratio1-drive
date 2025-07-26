@@ -17,7 +17,13 @@ export default function Home() {
   const eeId = useEeId();
 
   useEffect(() => {
-    fetchFiles();
+    // Only fetch files in the browser, not during build
+    if (typeof window !== 'undefined') {
+      fetchFiles();
+    } else {
+      // During build, just set loading to false
+      setIsLoading(false);
+    }
   }, []);
 
   const fetchFiles = async () => {
