@@ -6,8 +6,8 @@ import {
   ChainStoreValue 
 } from './types';
 
-const CSTORE_API_URL = process.env.CSTORE_API_URL || 'http://localhost:30000';
-const R1FS_API_URL = process.env.R1FS_API_URL || 'http://localhost:30001';
+const CSTORE_API_URL = process.env.CSTORE_API_URL || 'http://localhost:31234';
+const R1FS_API_URL = process.env.R1FS_API_URL || 'http://localhost:31235';
 
 // Base API Client with common functionality
 abstract class BaseApiClient {
@@ -25,17 +25,63 @@ abstract class BaseApiClient {
       body?: string | FormData;
     }
   ): Promise<Response> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: options.method,
-      headers: options.headers,
-      body: options.body,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Request failed: ${response.statusText}`);
+    const url = `${this.baseUrl}${endpoint}`;
+    
+    if (config.DEBUG) {
+      console.log('🚀 [DEBUG] Sending request:', {
+        url,
+        method: options.method,
+        headers: options.headers,
+        body: options.body instanceof FormData ? '[FormData]' : options.body
+      });
     }
 
-    return response;
+    const startTime = Date.now();
+    
+    try {
+      const response = await fetch(url, {
+        method: options.method,
+        headers: options.headers,
+        body: options.body,
+      });
+
+      const duration = Date.now() - startTime;
+
+      if (config.DEBUG) {
+        console.log('✅ [DEBUG] Received response:', {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          duration: `${duration}ms`,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+      }
+
+      if (!response.ok) {
+        if (config.DEBUG) {
+          console.error('❌ [DEBUG] Request failed:', {
+            url,
+            status: response.status,
+            statusText: response.statusText
+          });
+        }
+        throw new Error(`Request failed: ${response.statusText}`);
+      }
+
+      return response;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      
+      if (config.DEBUG) {
+        console.error('💥 [DEBUG] Request error:', {
+          url,
+          error: error instanceof Error ? error.message : String(error),
+          duration: `${duration}ms`
+        });
+      }
+      
+      throw error;
+    }
   }
 
   protected buildQueryString(params: Record<string, any>): string {
@@ -218,14 +264,6 @@ class R1FSApiClient extends BaseApiClient {
     
     // Add the stringified body as a separate field
     uploadFormData.append('body', JSON.stringify(bodyData));
-    
-    // Log the FormData contents before sending
-    console.log('=== R1FS Upload Request (Streaming) ===');
-    console.log('URL:', `${this.baseUrl}/add_file`);
-
-    // Log request body info
-    console.log('Stringified body:', JSON.stringify(bodyData));
-    console.log('=====================================');
 
     const response = await this.request('/add_file', {
       method: 'POST',
@@ -236,20 +274,6 @@ class R1FSApiClient extends BaseApiClient {
   }
 
   async uploadFileBase64(data: { file_base64_str: string; filename?: string; secret?: string }): Promise<any> {
-    // Log the request details before sending
-    console.log('=== R1FS Upload Request (Base64) ===');
-    console.log('URL:', `${this.baseUrl}/add_file_base64`);
-    console.log('Method: POST');
-    console.log('Headers:', {
-      'Content-Type': 'application/json',
-    });
-    console.log('Body:', {
-      filename: data.filename,
-      secret: data.secret ? '[PRESENT]' : '[NOT PRESENT]',
-      file_base64_str: `${data.file_base64_str.substring(0, 50)}... (truncated)`
-    });
-    console.log('=====================================');
-
     const response = await this.request('/add_file_base64', {
       method: 'POST',
       headers: {

@@ -62,12 +62,9 @@ export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
           <div className="flex-1 overflow-y-auto space-y-6">
             {isLoading && (
               <div className="flex items-center justify-center py-12">
-                <div className="text-center space-y-4">
-                  <div className="relative">
-                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-ratio1-200 border-t-ratio1-600 mx-auto"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-purple-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-                  </div>
-                  <p className="text-gray-600 font-medium">Loading system status...</p>
+                <div className="relative">
+                  <div className="w-20 h-20 border-4 border-ratio1-200 border-t-ratio1-600 rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 w-20 h-20 border-4 border-transparent border-t-purple-500 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
                 </div>
               </div>
             )}
