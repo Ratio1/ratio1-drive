@@ -32,18 +32,25 @@ jobs:
       - name: Get previous version from git
         id: previous-version
         run: |
-          # Get the previous commit on main branch
-          PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
-          
-          # Checkout the previous commit temporarily to get its package.json version
-          git checkout $PREVIOUS_COMMIT -- package.json
-          PREVIOUS_VERSION=$(node -p "require('./package.json').version")
-          
-          # Restore the current package.json
-          git checkout HEAD -- package.json
-          
-          echo "previous_version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
-          echo "Previous version: $PREVIOUS_VERSION"
+          # Check if this is the first commit or if we can get a previous commit
+          if git rev-parse HEAD~1 >/dev/null 2>&1; then
+            # Get the previous commit on main branch
+            PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
+            
+            # Checkout the previous commit temporarily to get its package.json version
+            git checkout $PREVIOUS_COMMIT -- package.json
+            PREVIOUS_VERSION=$(node -p "require('./package.json').version")
+            
+            # Restore the current package.json
+            git checkout HEAD -- package.json
+            
+            echo "previous_version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
+            echo "Previous version: $PREVIOUS_VERSION"
+          else
+            # This is the first commit, so there's no previous version
+            echo "previous_version=" >> $GITHUB_OUTPUT
+            echo "Previous version: (none - first commit)"
+          fi
 
       - name: Check if version was incremented
         id: version-check
@@ -55,26 +62,34 @@ jobs:
           echo "Previous: $PREVIOUS_VERSION"
           echo "Current: $CURRENT_VERSION"
           
-          # Use npm version comparison logic
-          if npm version "$CURRENT_VERSION" --allow-same-version > /dev/null 2>&1; then
-            # Check if current version is greater than previous
-            if npm version "$CURRENT_VERSION" --allow-same-version > /dev/null 2>&1 && \
-               npm version "$PREVIOUS_VERSION" --allow-same-version > /dev/null 2>&1; then
-              # Use a simple string comparison for semantic versions
-              if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
-                echo "✅ Version was incremented from $PREVIOUS_VERSION to $CURRENT_VERSION"
-                echo "version_incremented=true" >> $GITHUB_OUTPUT
+          # If there's no previous version, this is the first commit
+          if [ -z "$PREVIOUS_VERSION" ]; then
+            echo "✅ First commit detected - creating initial tag for version $CURRENT_VERSION"
+            echo "version_incremented=true" >> $GITHUB_OUTPUT
+            echo "is_initial_tag=true" >> $GITHUB_OUTPUT
+          else
+            # Use npm version comparison logic
+            if npm version "$CURRENT_VERSION" --allow-same-version > /dev/null 2>&1; then
+              # Check if current version is greater than previous
+              if npm version "$CURRENT_VERSION" --allow-same-version > /dev/null 2>&1 && \
+                 npm version "$PREVIOUS_VERSION" --allow-same-version > /dev/null 2>&1; then
+                # Use a simple string comparison for semantic versions
+                if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+                  echo "✅ Version was incremented from $PREVIOUS_VERSION to $CURRENT_VERSION"
+                  echo "version_incremented=true" >> $GITHUB_OUTPUT
+                  echo "is_initial_tag=false" >> $GITHUB_OUTPUT
+                else
+                  echo "❌ Version was not incremented. Current: $CURRENT_VERSION, Previous: $PREVIOUS_VERSION"
+                  echo "version_incremented=false" >> $GITHUB_OUTPUT
+                fi
               else
-                echo "❌ Version was not incremented. Current: $CURRENT_VERSION, Previous: $PREVIOUS_VERSION"
+                echo "❌ Invalid version format detected"
                 echo "version_incremented=false" >> $GITHUB_OUTPUT
               fi
             else
-              echo "❌ Invalid version format detected"
+              echo "❌ Invalid version format in package.json"
               echo "version_incremented=false" >> $GITHUB_OUTPUT
             fi
-          else
-            echo "❌ Invalid version format in package.json"
-            echo "version_incremented=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Create tag if version was incremented
@@ -82,8 +97,13 @@ jobs:
         run: |
           CURRENT_VERSION="${{ steps.current-version.outputs.current-version }}"
           TAG_NAME="v$CURRENT_VERSION"
+          IS_INITIAL_TAG="${{ steps.version-check.outputs.is_initial_tag }}"
           
-          echo "Creating tag: $TAG_NAME"
+          if [ "$IS_INITIAL_TAG" = "true" ]; then
+            echo "🎉 Creating initial tag: $TAG_NAME"
+          else
+            echo "Creating tag: $TAG_NAME"
+          fi
           
           # Create and push the tag
           git tag $TAG_NAME
