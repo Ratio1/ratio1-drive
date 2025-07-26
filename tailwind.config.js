@@ -8,19 +8,19 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'ratio1': {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
+        ratio1: {
+          50: 'var(--ratio1-50)',
+          100: 'var(--ratio1-100)',
+          200: 'var(--ratio1-200)',
+          300: 'var(--ratio1-300)',
+          400: 'var(--ratio1-400)',
+          500: 'var(--ratio1-500)',
+          600: 'var(--ratio1-600)',
+          700: 'var(--ratio1-700)',
+          800: 'var(--ratio1-800)',
+          900: 'var(--ratio1-900)',
         },
-        'purple': {
+        purple: {
           50: '#faf5ff',
           100: '#f3e8ff',
           200: '#e9d5ff',
