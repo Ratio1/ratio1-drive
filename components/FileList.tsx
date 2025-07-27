@@ -324,7 +324,7 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
                       </div>
                       <button
                         onClick={() => handleDownloadClick(file)}
-                        className={`p-2 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 ${
+                        className={`p-2 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 cursor-pointer ${
                           isCurrent 
                             ? 'text-ratio1-600 hover:text-ratio1-700 hover:bg-ratio1-100' 
                             : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'

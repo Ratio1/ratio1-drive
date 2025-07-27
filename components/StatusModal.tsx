@@ -6,8 +6,11 @@ import {
   InformationCircleIcon,
   SparklesIcon,
   ArrowPathRoundedSquareIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  ChevronDownIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
+import { useState } from 'react';
 import { useStatus } from '@/lib/contexts/StatusContext';
 
 interface StatusModalProps {
@@ -17,6 +20,7 @@ interface StatusModalProps {
 
 export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
   const { r1fsStatus, cstoreStatus, isLoading, error, refresh } = useStatus();
+  const [showCStore, setShowCStore] = useState(false);
 
   const renderValue = (value: any): string => {
     if (typeof value === 'object' && value !== null) {
@@ -25,14 +29,12 @@ export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
     return String(value);
   };
 
-
-
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
 
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="card-glass p-8 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <Dialog.Panel className="card-glass p-8 w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col">
           {/* Enhanced Header */}
           <div className="flex justify-between items-center mb-8">
             <div className="flex items-center space-x-4">
@@ -59,7 +61,7 @@ export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-6">
+          <div className="flex-1 space-y-6 overflow-y-auto">
             {isLoading && (
               <div className="flex items-center justify-center py-12">
                 <div className="relative">
@@ -84,7 +86,7 @@ export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
             {r1fsStatus && !isLoading && !error && (
               <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">R1FS Status Data</h3>
-                <div className="space-y-4 max-h-96 overflow-y-auto">
+                <div className="space-y-4">
                   {Object.entries(r1fsStatus).map(([key, value]) => key != 'result' && (
                     <div key={key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                       <div className="flex justify-between items-start mb-2">
@@ -103,25 +105,39 @@ export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
               </div>
             )}
 
+            {/* CStore Section - Collapsible */}
             {cstoreStatus && !isLoading && !error && (
               <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">CStore Status Data</h3>
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {Object.entries(cstoreStatus).map(([key, value]) => key != 'result' && (
-                    <div key={key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="font-semibold text-gray-900 text-sm bg-white px-2 py-1 rounded border">
-                          {key}
-                        </span>
+                <button
+                  onClick={() => setShowCStore(!showCStore)}
+                  className="flex items-center justify-between w-full text-left mb-4"
+                >
+                  <h3 className="text-lg font-semibold text-gray-900">CStore Status Data</h3>
+                  {showCStore ? (
+                    <ChevronDownIcon className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <ChevronRightIcon className="h-5 w-5 text-gray-500" />
+                  )}
+                </button>
+                
+                {showCStore && (
+                  <div className="space-y-4">
+                    {Object.entries(cstoreStatus).map(([key, value]) => key != 'result' && (
+                      <div key={key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-semibold text-gray-900 text-sm bg-white px-2 py-1 rounded border">
+                            {key}
+                          </span>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 border border-gray-200">
+                          <pre className="text-sm text-gray-600 whitespace-pre-wrap font-mono overflow-x-auto">
+                            {renderValue(value)}
+                          </pre>
+                        </div>
                       </div>
-                      <div className="bg-white rounded-lg p-3 border border-gray-200">
-                        <pre className="text-sm text-gray-600 whitespace-pre-wrap font-mono overflow-x-auto">
-                          {renderValue(value)}
-                        </pre>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
