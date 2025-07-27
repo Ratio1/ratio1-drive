@@ -36,7 +36,7 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const { status } = useStatus();
+  const { r1fsStatus } = useStatus();
 
   const handleDownloadClick = (file: FileMetadata) => {
     setSelectedFile(file);
@@ -59,7 +59,7 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
 
   // Get the current node's address from status
   const getCurrentNodeAddress = () => {
-    return status?.server_node_addr || status?.ee_node_address || null;
+    return r1fsStatus?.server_node_addr || r1fsStatus?.ee_node_address || null;
   };
 
   // Check if a machine is the current node
@@ -70,10 +70,10 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
 
   // Extract ETH address from status data
   const getEthAddress = () => {
-    if (!status) return null;
+    if (!r1fsStatus) return null;
     
     // The ETH address is stored in ee_node_eth_address property
-    return status.ee_node_eth_address || null;
+    return r1fsStatus.ee_node_eth_address || null;
   };
 
   const ethAddress = getEthAddress();
@@ -92,7 +92,7 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
   return (
     <div className="space-y-8">
       {/* Enhanced Current Node Information Section */}
-      {status && (
+      {r1fsStatus && (
         <div className="card-glass p-8 border-0">
           <div className="flex items-start space-x-6">
             <div className="relative">
@@ -118,7 +118,7 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
                        <span className="text-sm font-semibold text-gray-700">Node Alias</span>
                      </div>
                      <button
-                       onClick={() => copyToClipboard(status.ee_node_alias || 'N/A', 'nodeAlias')}
+                                               onClick={() => copyToClipboard(r1fsStatus?.ee_node_alias || 'N/A', 'nodeAlias')}
                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
                        title="Copy Node Alias"
                      >
@@ -130,7 +130,7 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
                      </button>
                    </div>
                    <div className="address-display">
-                     {status.ee_node_alias || 'N/A'}
+                                           {r1fsStatus?.ee_node_alias || 'N/A'}
                    </div>
                  </div>
 
@@ -195,7 +195,7 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
                  )}
 
                  {/* EE ID */}
-                 {status.EE_ID && (
+                 {r1fsStatus?.EE_ID && (
                    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50">
                      <div className="flex items-center justify-between mb-2">
                        <div className="flex items-center space-x-2">
@@ -204,7 +204,7 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
                        </div>
                        <button
                          onClick={() => {
-                           if (status.EE_ID) copyToClipboard(status.EE_ID, 'eeId');
+                           if (r1fsStatus?.EE_ID) copyToClipboard(r1fsStatus.EE_ID, 'eeId');
                          }}
                          className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
                          title="Copy EE ID"
@@ -217,7 +217,7 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
                        </button>
                      </div>
                      <div className="address-display">
-                       {status.EE_ID}
+                       {r1fsStatus?.EE_ID}
                      </div>
                    </div>
                  )}

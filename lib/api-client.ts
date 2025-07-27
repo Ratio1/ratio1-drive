@@ -324,6 +324,14 @@ export class ApiClient {
     return r1fsApi.getStatus();
   }
 
+  static async getR1FSStatus(): Promise<any> {
+    return r1fsApi.getStatus();
+  }
+
+  static async getCStoreStatus(): Promise<any> {
+    return cstoreApi.getStatus();
+  }
+
   static async uploadFileStreaming(formData: FormData): Promise<any> {
     return r1fsApi.uploadFileStreaming(formData);
   }

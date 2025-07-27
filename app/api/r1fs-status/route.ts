@@ -10,10 +10,10 @@ export async function GET(request: NextRequest) {
     // Log incoming request
     logger.logRequest(request);
     
-    const data = await ApiClient.getStatus();
+    const data = await ApiClient.getR1FSStatus();
     
     // Debug: log the status data to see what fields are available
-    console.log('Status API response data:', JSON.stringify(data, null, 2));
+    console.log('R1FS Status API response data:', JSON.stringify(data, null, 2));
     
     const response = NextResponse.json(data);
     
@@ -22,13 +22,13 @@ export async function GET(request: NextRequest) {
     
     return response;
   } catch (error) {
-    console.error('Error fetching status:', error);
+    console.error('Error fetching R1FS status:', error);
     
     // Log error
     logger.logError(request, error, startTime);
     
     return NextResponse.json(
-      { error: 'Failed to fetch status' },
+      { error: 'Failed to fetch R1FS status' },
       { status: 500 }
     );
   }

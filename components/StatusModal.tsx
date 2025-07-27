@@ -16,7 +16,7 @@ interface StatusModalProps {
 }
 
 export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
-  const { status, isLoading, error, refresh } = useStatus();
+  const { r1fsStatus, cstoreStatus, isLoading, error, refresh } = useStatus();
 
   const renderValue = (value: any): string => {
     if (typeof value === 'object' && value !== null) {
@@ -81,11 +81,33 @@ export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
               </div>
             )}
 
-            {status && !isLoading && !error && (
+            {r1fsStatus && !isLoading && !error && (
               <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Complete Status Data</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">R1FS Status Data</h3>
                 <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {Object.entries(status).map(([key, value]) => key != 'result' && (
+                  {Object.entries(r1fsStatus).map(([key, value]) => key != 'result' && (
+                    <div key={key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="font-semibold text-gray-900 text-sm bg-white px-2 py-1 rounded border">
+                          {key}
+                        </span>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-gray-200">
+                        <pre className="text-sm text-gray-600 whitespace-pre-wrap font-mono overflow-x-auto">
+                          {renderValue(value)}
+                        </pre>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {cstoreStatus && !isLoading && !error && (
+              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">CStore Status Data</h3>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {Object.entries(cstoreStatus).map(([key, value]) => key != 'result' && (
                     <div key={key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                       <div className="flex justify-between items-start mb-2">
                         <span className="font-semibold text-gray-900 text-sm bg-white px-2 py-1 rounded border">

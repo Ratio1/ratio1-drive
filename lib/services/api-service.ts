@@ -86,6 +86,14 @@ class ApiService {
     return this.request('/api/status');
   }
 
+  async getR1FSStatus(): Promise<any> {
+    return this.request('/api/r1fs-status');
+  }
+
+  async getCStoreStatus(): Promise<any> {
+    return this.request('/api/cstore-status');
+  }
+
   // Refresh files
   async refreshFiles(): Promise<FilesData> {
     return this.getFiles();
