@@ -4,6 +4,7 @@ import { Switch } from '@headlessui/react';
 import { CloudIcon, CogIcon, CurrencyDollarIcon, SparklesIcon, UserIcon } from '@heroicons/react/24/outline';
 import { useStatus } from '@/lib/contexts/StatusContext';
 import { useToast } from '@/lib/contexts/ToastContext';
+import DualStatusWidget from './DualStatusWidget';
 
 interface HeaderProps {
   transferMode: 'streaming' | 'base64';
@@ -13,13 +14,13 @@ interface HeaderProps {
 }
 
 export default function Header({ transferMode, onTransferModeChange, eeId, username }: HeaderProps) {
-  const { status } = useStatus();
+  const { r1fsStatus } = useStatus();
   const { showToast } = useToast();
   
   // Extract ETH address from status data
   const getEthAddress = () => {
     // The ETH address is stored in ee_node_eth_address property
-    return status?.ee_node_eth_address || null;
+    return r1fsStatus?.ee_node_eth_address || null;
   };
 
   const ethAddress = getEthAddress();
@@ -105,15 +106,8 @@ export default function Header({ transferMode, onTransferModeChange, eeId, usern
               </span>
             </div>
             
-            {/* Status Indicator */}
-            <div className="flex items-center space-x-2">
-              <div className={`w-3 h-3 rounded-full ${
-                status ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
-              }`}></div>
-              <span className="text-sm text-gray-600">
-                {status ? 'Connected' : 'Disconnected'}
-              </span>
-            </div>
+            {/* Dual Status Widget */}
+            <DualStatusWidget />
 
           </div>
         </div>

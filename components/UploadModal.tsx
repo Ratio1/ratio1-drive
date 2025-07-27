@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { 
   XMarkIcon, 
@@ -15,12 +15,13 @@ import {
 } from '@heroicons/react/24/outline';
 import { useUser } from '@/lib/contexts/UserContext';
 import { useToast } from '@/lib/contexts/ToastContext';
+import { apiService } from '@/lib/services/api-service';
 
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   transferMode: 'streaming' | 'base64';
-  onUploadSuccess: () => void;
+  onUploadSuccess: (uploadData: { cid: string; filename: string; isEncrypted: boolean }) => void;
 }
 
 export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuccess }: UploadModalProps) {
@@ -60,45 +61,27 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
         if (secret) formData.append('secret', secret);
         formData.append('owner', username);
 
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open('POST', '/api/upload');
-
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              const progress = Math.round((e.loaded / e.total) * 100);
-              setUploadProgress(progress);
-            }
-          };
-
-          xhr.onload = () => {
-            setUploadStep('chainstore');
-            try {
-              const result = JSON.parse(xhr.responseText);
-              if (xhr.status >= 200 && xhr.status < 300) {
-                setUploadStatus('success');
-                setUploadMessage('File uploaded successfully!');
-                setUploadStep('completed');
-                showToast('File uploaded successfully!', 'success');
-                setTimeout(() => {
-                  onUploadSuccess();
-                  handleClose();
-                }, 2000);
-                resolve();
-              } else {
-                reject(new Error(result.error || 'Upload failed'));
-              }
-            } catch {
-              reject(new Error('Upload failed'));
-            }
-          };
-
-          xhr.onerror = () => {
-            reject(new Error('Upload failed'));
-          };
-
-          xhr.send(formData);
+        const uploadResult = await apiService.uploadFileWithProgress(formData, (progress) => {
+          setUploadProgress(progress);
         });
+        
+        // Extract CID from the upload result
+        const cid = uploadResult?.result?.cid || uploadResult?.cid;
+        if (cid) {
+          setUploadStep('chainstore');
+          setUploadStatus('success');
+          setUploadMessage('File uploaded successfully!');
+          setUploadStep('completed');
+          showToast('File uploaded successfully!', 'success');
+          // Call the success callback with upload data
+          onUploadSuccess({
+            cid,
+            filename: selectedFile.name,
+            isEncrypted: !!secret
+          });
+        } else {
+          throw new Error('Upload successful but no CID received');
+        }
       } else {
         // Base64 mode
         const reader = new FileReader();
@@ -110,35 +93,30 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
           reader.readAsDataURL(selectedFile);
         });
 
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            file_base64_str: fileBase64,
-            filename: selectedFile.name,
-            secret: secret || undefined,
-            owner: username,
-          }),
+        const uploadResult = await apiService.uploadFileBase64({
+          file_base64_str: fileBase64,
+          filename: selectedFile.name,
+          secret: secret || undefined,
+          owner: username,
         });
 
-        setUploadProgress(100);
-
-        const result = await response.json();
-        setUploadStep('chainstore');
-
-        if (response.ok) {
+        // Extract CID from the upload result
+        const cid = uploadResult?.result?.cid || uploadResult?.cid;
+        if (cid) {
+          setUploadProgress(100);
+          setUploadStep('chainstore');
           setUploadStatus('success');
           setUploadMessage('File uploaded successfully!');
           setUploadStep('completed');
           showToast('File uploaded successfully!', 'success');
-          setTimeout(() => {
-            onUploadSuccess();
-            handleClose();
-          }, 2000);
+          // Call the success callback with upload data
+          onUploadSuccess({
+            cid,
+            filename: selectedFile.name,
+            isEncrypted: !!secret
+          });
         } else {
-          throw new Error(result.error || 'Upload failed');
+          throw new Error('Upload successful but no CID received');
         }
       }
 
@@ -162,6 +140,8 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
     onClose();
     setUploadStep('idle');
   };
+
+
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -443,6 +423,7 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
           )}
         </Dialog.Panel>
       </div>
+
     </Dialog>
   );
 } 

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3333",
     "build": "next build",
-    "start": "next start -p 3333",
+    "start": "NEXT_LOG_LEVEL=verbose next start -p 3333",
     "lint": "next lint"
   },
   "dependencies": {
@@ -17,7 +17,8 @@
     "postcss": "^8.5.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.11",
+    "winston": "^3.15.0"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",

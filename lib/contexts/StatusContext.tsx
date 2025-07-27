@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { apiService } from '@/lib/services/api-service';
 
 interface StatusData {
   [key: string]: any;
@@ -8,7 +9,8 @@ interface StatusData {
 }
 
 interface StatusContextType {
-  status: StatusData | null;
+  r1fsStatus: StatusData | null;
+  cstoreStatus: StatusData | null;
   isLoading: boolean;
   error: string | null;
   fetchStatus: () => Promise<void>;
@@ -22,7 +24,8 @@ interface StatusProviderProps {
 }
 
 export function StatusProvider({ children }: StatusProviderProps) {
-  const [status, setStatus] = useState<StatusData | null>(null);
+  const [r1fsStatus, setR1FSStatus] = useState<StatusData | null>(null);
+  const [cstoreStatus, setCStoreStatus] = useState<StatusData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,12 +34,12 @@ export function StatusProvider({ children }: StatusProviderProps) {
     setError(null);
 
     try {
-      const response = await fetch('/api/status');
-      if (!response.ok) {
-        throw new Error('Failed to fetch status');
-      }
-      const data = await response.json();
-      setStatus(data);
+      const [r1fsData, cstoreData] = await Promise.all([
+        apiService.getR1FSStatus(),
+        apiService.getCStoreStatus()
+      ]);
+      setR1FSStatus(r1fsData);
+      setCStoreStatus(cstoreData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch status');
     } finally {
@@ -54,7 +57,8 @@ export function StatusProvider({ children }: StatusProviderProps) {
   }, [fetchStatus]);
 
   const value: StatusContextType = {
-    status,
+    r1fsStatus,
+    cstoreStatus,
     isLoading,
     error,
     fetchStatus,
@@ -78,11 +82,17 @@ export function useStatus() {
 
 // Convenience hooks for specific status data
 export function useEeId(): string {
-  const { status } = useStatus();
-  return status?.EE_ID || '';
+  const { r1fsStatus } = useStatus();
+  return r1fsStatus?.EE_ID || '';
 }
 
 export function useStatusValue<T = any>(key: string): T | undefined {
-  const { status } = useStatus();
-  return status?.[key] as T;
+  const { r1fsStatus } = useStatus();
+  return r1fsStatus?.[key] as T;
+}
+
+// Convenience hooks for CStore status data
+export function useCStoreStatusValue<T = any>(key: string): T | undefined {
+  const { cstoreStatus } = useStatus();
+  return cstoreStatus?.[key] as T;
 } 

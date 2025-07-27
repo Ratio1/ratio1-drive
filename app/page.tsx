@@ -5,17 +5,24 @@ import { PlusIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import Header from '@/components/Header';
 import FileList from '@/components/FileList';
 import UploadModal from '@/components/UploadModal';
+import UploadSuccessModal from '@/components/UploadSuccessModal';
 import UsernameModal from '@/components/UsernameModal';
 import ToastContainer from '@/components/Toast';
 import { FilesData, TransferMode } from '@/lib/types';
-import { config } from '@/lib/config';
 import { useEeId } from '@/lib/contexts/StatusContext';
 import { useUser } from '@/lib/contexts/UserContext';
+import { apiService } from '@/lib/services/api-service';
 
 export default function Home() {
   const [files, setFiles] = useState<FilesData>({});
   const [transferMode, setTransferMode] = useState<TransferMode>('streaming');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [uploadSuccessData, setUploadSuccessData] = useState<{
+    cid: string;
+    filename: string;
+    isEncrypted: boolean;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const eeId = useEeId();
   const { username, isUserSet, setUsername } = useUser();
@@ -32,45 +39,8 @@ export default function Home() {
 
   const fetchFiles = async () => {
     try {
-      const CSTORE_API_URL = process.env.NEXT_PUBLIC_CSTORE_API_URL || 'http://localhost:30000';
-      const response = await fetch(`${CSTORE_API_URL}/hgetall?hkey=${config.HKEY}`, {
-        method: 'GET',
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const result = data.result || {};
-        
-        // Transform the response: parse stringified JSON arrays and convert to FileMetadata
-        const transformedFiles: FilesData = {};
-        Object.entries(result).forEach(([machine, stringifiedArray]) => {
-          try {
-            const parsed = JSON.parse(stringifiedArray as string);
-            // Handle both old format (string array) and new format (metadata array)
-            if (Array.isArray(parsed)) {
-              if (typeof parsed[0] === 'string') {
-                // Old format - convert to new format
-                transformedFiles[machine] = parsed.map((cid: string) => ({
-                  cid,
-                  filename: `file_${cid.substring(0, 8)}`,
-                  date_uploaded: new Date().toISOString(),
-                  owner: 'Unknown',
-                  isEncryptedWithCustomKey: false
-                }));
-              } else {
-                // New format - already metadata objects
-                transformedFiles[machine] = parsed;
-              }
-            } else {
-              transformedFiles[machine] = [];
-            }
-          } catch (parseError) {
-            console.error(`Error parsing data for machine ${machine}:`, parseError);
-            transformedFiles[machine] = [];
-          }
-        });
-        
-        setFiles(transformedFiles);
-      }
+      const transformedFiles = await apiService.getFiles();
+      setFiles(transformedFiles);
     } catch (error) {
       console.error('Error fetching files:', error);
     } finally {
@@ -78,8 +48,16 @@ export default function Home() {
     }
   };
 
-  const handleUploadSuccess = () => {
+  const handleUploadSuccess = (uploadData: { cid: string; filename: string; isEncrypted: boolean }) => {
+    setUploadSuccessData(uploadData);
+    setShowSuccessModal(true);
+    setShowUploadModal(false);
     fetchFiles();
+  };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    setUploadSuccessData(null);
   };
 
   const handleUsernameSet = (newUsername: string) => {
@@ -195,6 +173,17 @@ export default function Home() {
           transferMode={transferMode}
           onUploadSuccess={handleUploadSuccess}
         />
+
+        {/* Upload Success Modal */}
+        {uploadSuccessData && (
+          <UploadSuccessModal
+            isOpen={showSuccessModal}
+            onClose={handleSuccessModalClose}
+            cid={uploadSuccessData.cid}
+            filename={uploadSuccessData.filename}
+            isEncryptedWithCustomKey={uploadSuccessData.isEncrypted}
+          />
+        )}
 
         {/* Username Modal */}
         <UsernameModal
