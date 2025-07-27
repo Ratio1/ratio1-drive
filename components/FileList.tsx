@@ -18,12 +18,14 @@ import {
   ArrowPathRoundedSquareIcon,
   UserIcon,
   LockClosedIcon,
-  LockOpenIcon
+  LockOpenIcon,
+  ShareIcon
 } from '@heroicons/react/24/outline';
 import { FilesData, FileMetadata } from '@/lib/types';
 import { useStatus } from '@/lib/contexts/StatusContext';
 import DownloadModal from './DownloadModal';
 import StatusModal from './StatusModal';
+import ShareModal from './ShareModal';
 
 interface FileListProps {
   files: FilesData;
@@ -34,6 +36,7 @@ interface FileListProps {
 export default function FileList({ files, transferMode, onRefresh }: FileListProps) {
   const [selectedFile, setSelectedFile] = useState<FileMetadata | null>(null);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const { r1fsStatus } = useStatus();
@@ -41,6 +44,11 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
   const handleDownloadClick = (file: FileMetadata) => {
     setSelectedFile(file);
     setShowDownloadModal(true);
+  };
+
+  const handleShareClick = (file: FileMetadata) => {
+    setSelectedFile(file);
+    setShowShareModal(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -322,17 +330,30 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
                           isCurrent ? 'text-ratio1-600' : 'text-gray-500'
                         }`} />
                       </div>
-                      <button
-                        onClick={() => handleDownloadClick(file)}
-                        className={`p-2 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 cursor-pointer ${
-                          isCurrent 
-                            ? 'text-ratio1-600 hover:text-ratio1-700 hover:bg-ratio1-100' 
-                            : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'
-                        }`}
-                        title="Download"
-                      >
-                        <ArrowDownTrayIcon className="h-5 w-5" />
-                      </button>
+                      <div className="flex space-x-1">
+                        <button
+                          onClick={() => handleShareClick(file)}
+                          className={`p-2 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 cursor-pointer ${
+                            isCurrent 
+                              ? 'text-ratio1-600 hover:text-ratio1-700 hover:bg-ratio1-100' 
+                              : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'
+                          }`}
+                          title="Share"
+                        >
+                          <ShareIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDownloadClick(file)}
+                          className={`p-2 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 cursor-pointer ${
+                            isCurrent 
+                              ? 'text-ratio1-600 hover:text-ratio1-700 hover:bg-ratio1-100' 
+                              : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'
+                          }`}
+                          title="Download"
+                        >
+                          <ArrowDownTrayIcon className="h-5 w-5" />
+                        </button>
+                      </div>
                     </div>
                     
                     <div className="space-y-3">
@@ -405,6 +426,17 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
           }}
           file={selectedFile}
           transferMode={transferMode}
+        />
+      )}
+
+      {selectedFile && (
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => {
+            setShowShareModal(false);
+            setSelectedFile(null);
+          }}
+          file={selectedFile}
         />
       )}
 
