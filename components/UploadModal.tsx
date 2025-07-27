@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { 
   XMarkIcon, 
@@ -21,7 +21,7 @@ interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   transferMode: 'streaming' | 'base64';
-  onUploadSuccess: () => void;
+  onUploadSuccess: (uploadData: { cid: string; filename: string; isEncrypted: boolean }) => void;
 }
 
 export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuccess }: UploadModalProps) {
@@ -61,19 +61,27 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
         if (secret) formData.append('secret', secret);
         formData.append('owner', username);
 
-        await apiService.uploadFileWithProgress(formData, (progress) => {
+        const uploadResult = await apiService.uploadFileWithProgress(formData, (progress) => {
           setUploadProgress(progress);
         });
         
-        setUploadStep('chainstore');
-        setUploadStatus('success');
-        setUploadMessage('File uploaded successfully!');
-        setUploadStep('completed');
-        showToast('File uploaded successfully!', 'success');
-        setTimeout(() => {
-          onUploadSuccess();
-          handleClose();
-        }, 2000);
+        // Extract CID from the upload result
+        const cid = uploadResult?.result?.cid || uploadResult?.cid;
+        if (cid) {
+          setUploadStep('chainstore');
+          setUploadStatus('success');
+          setUploadMessage('File uploaded successfully!');
+          setUploadStep('completed');
+          showToast('File uploaded successfully!', 'success');
+          // Call the success callback with upload data
+          onUploadSuccess({
+            cid,
+            filename: selectedFile.name,
+            isEncrypted: !!secret
+          });
+        } else {
+          throw new Error('Upload successful but no CID received');
+        }
       } else {
         // Base64 mode
         const reader = new FileReader();
@@ -85,23 +93,31 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
           reader.readAsDataURL(selectedFile);
         });
 
-        await apiService.uploadFileBase64({
+        const uploadResult = await apiService.uploadFileBase64({
           file_base64_str: fileBase64,
           filename: selectedFile.name,
           secret: secret || undefined,
           owner: username,
         });
 
-        setUploadProgress(100);
-        setUploadStep('chainstore');
-        setUploadStatus('success');
-        setUploadMessage('File uploaded successfully!');
-        setUploadStep('completed');
-        showToast('File uploaded successfully!', 'success');
-        setTimeout(() => {
-          onUploadSuccess();
-          handleClose();
-        }, 2000);
+        // Extract CID from the upload result
+        const cid = uploadResult?.result?.cid || uploadResult?.cid;
+        if (cid) {
+          setUploadProgress(100);
+          setUploadStep('chainstore');
+          setUploadStatus('success');
+          setUploadMessage('File uploaded successfully!');
+          setUploadStep('completed');
+          showToast('File uploaded successfully!', 'success');
+          // Call the success callback with upload data
+          onUploadSuccess({
+            cid,
+            filename: selectedFile.name,
+            isEncrypted: !!secret
+          });
+        } else {
+          throw new Error('Upload successful but no CID received');
+        }
       }
 
     } catch (error) {
@@ -124,6 +140,8 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
     onClose();
     setUploadStep('idle');
   };
+
+
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -405,6 +423,7 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
           )}
         </Dialog.Panel>
       </div>
+
     </Dialog>
   );
 } 
