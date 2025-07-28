@@ -1,6 +1,6 @@
 {
   "name": "ratio1-drive",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3333",
@@ -17,7 +17,7 @@
     "form-data": "^4.0.4",
     "next": "15.4.4",
     "postcss": "^8.5.6",
-    "ratio1-edge-node-client": "^0.2.2",
+    "ratio1-edge-node-client": "^0.2.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwindcss": "^4.1.11",
