@@ -14,13 +14,13 @@ interface HeaderProps {
 }
 
 export default function Header({ transferMode, onTransferModeChange, eeId, username }: HeaderProps) {
-  const { r1fsStatus } = useStatus();
+  const { r1fsStatus, cstoreStatus } = useStatus();
   const { showToast } = useToast();
-  
+
   // Extract ETH address from status data
   const getEthAddress = () => {
     // The ETH address is stored in ee_node_eth_address property
-    return r1fsStatus?.ee_node_eth_address || null;
+    return r1fsStatus?.ee_node_eth_address || cstoreStatus?.ee_node_eth_address || null;
   };
 
   const ethAddress = getEthAddress();
@@ -53,12 +53,6 @@ export default function Header({ transferMode, onTransferModeChange, eeId, usern
                         {username}
                       </span>
                     </div>
-                  )}
-                  {eeId && (
-                    <p className="text-sm text-gray-600 flex items-center">
-                      <CogIcon className="h-4 w-4 mr-1" />
-                      EE_ID: <span className="font-mono ml-1">{eeId}</span>
-                    </p>
                   )}
                   {ethAddress && (
                     <div className="flex items-center space-x-2">
@@ -94,7 +88,7 @@ export default function Header({ transferMode, onTransferModeChange, eeId, usern
                 Streaming
               </span>
             </div>
-            
+
             {/* Dual Status Widget */}
             <DualStatusWidget />
 
@@ -103,4 +97,4 @@ export default function Header({ transferMode, onTransferModeChange, eeId, usern
       </div>
     </header>
   );
-} 
+}
