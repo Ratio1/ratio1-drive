@@ -7,20 +7,19 @@ export async function GET(request: NextRequest) {
     const cid = searchParams.get('cid');
     const secret = searchParams.get('secret');
     const mode = searchParams.get('mode') || 'streaming';
-    
+
     if (!cid) {
       return NextResponse.json(
         { error: 'CID is required' },
         { status: 400 }
       );
     }
-    
+
     if (mode === 'streaming') {
       const response = await ApiClient.downloadFileStreaming(cid, secret || undefined);
-      
       // Get the file data and filename from headers or response
       const fileData = await response.arrayBuffer();
-      
+
       // Extract filename from x-meta header
       let filename = cid;
       const xMetaHeader = response.headers.get('x-meta');
@@ -39,7 +38,7 @@ export async function GET(request: NextRequest) {
         // Fallback to filename header if x-meta is not present
         filename = response.headers.get('filename') || 'download';
       }
-      
+
       return new NextResponse(fileData, {
         headers: {
           'Content-Type': 'application/octet-stream',
@@ -64,20 +63,20 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { cid, secret, mode } = await request.json();
-    
+
     if (!cid) {
       return NextResponse.json(
         { error: 'CID is required' },
         { status: 400 }
       );
     }
-    
+
     if (mode === 'streaming') {
       const response = await ApiClient.downloadFileStreaming(cid, secret);
-      
+
       // Get the file data and filename from headers or response
       const fileData = await response.arrayBuffer();
-      
+
       // Extract filename from x-meta header
       let filename = 'download';
       const xMetaHeader = response.headers.get('x-meta');
@@ -96,7 +95,7 @@ export async function POST(request: NextRequest) {
         // Fallback to filename header if x-meta is not present
         filename = response.headers.get('filename') || 'download';
       }
-      
+
       return new NextResponse(fileData, {
         headers: {
           'Content-Type': 'application/octet-stream',

@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { Dialog } from '@headlessui/react';
-import { 
-  XMarkIcon, 
-  ArrowDownTrayIcon, 
-  DocumentIcon, 
+import {
+  XMarkIcon,
+  ArrowDownTrayIcon,
+  DocumentIcon,
   ExclamationCircleIcon,
   SparklesIcon,
   CloudArrowDownIcon,
@@ -57,7 +57,8 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
       if (transferMode === 'streaming') {
         // For streaming mode, use the API service
         const response = await apiService.downloadFileStreaming(file.cid, secret);
-
+        console.log("============================");
+        console.log(response);
         // Create a blob from the response and trigger download
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -77,7 +78,7 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
       } else {
         // For base64 mode, use the API service
         const result = await apiService.downloadFileBase64(file.cid, secret);
-        
+
         // Convert base64 to blob and trigger download
         const binaryString = atob(result.file_base64_str);
         const bytes = new Uint8Array(binaryString.length);
@@ -201,7 +202,7 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
                       </span>
                     </div>
                   </div>
-                  
+
                   {/* Owner Information */}
                   <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200/50">
                     <div className="flex items-center justify-between mb-1">
@@ -306,7 +307,7 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                {file.isEncryptedWithCustomKey 
+                {file.isEncryptedWithCustomKey
                   ? 'This file is encrypted. You must enter the correct secret key to download.'
                   : 'Enter the secret key if this file was encrypted during upload'
                 }
@@ -380,7 +381,7 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
               <div className="text-center space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900">Downloading File</h3>
                 <p className="text-sm text-gray-600">Retrieving from decentralized storage</p>
-                
+
                 {/* Animated Progress Bar */}
                 <div className="w-64 bg-gray-200 h-2 rounded-full overflow-hidden">
                   <div className="bg-gradient-to-r from-ratio1-500 to-purple-500 h-2 rounded-full animate-pulse" style={{ width: '100%' }} />
@@ -392,4 +393,4 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
       </div>
     </Dialog>
   );
-} 
+}

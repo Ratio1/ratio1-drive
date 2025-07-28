@@ -74,34 +74,23 @@ export default function Header({ transferMode, onTransferModeChange, eeId, usern
             </div>
           </div>
 
-          {/* Transfer Mode Toggle Section */}
+          {/* Transfer Mode Toggle Section - Disabled */}
           <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-4 bg-gray-50/80 backdrop-blur-sm rounded-xl p-3 border border-gray-200/50">
-              <span className={`text-sm font-medium transition-colors duration-200 ${
-                transferMode === 'base64' ? 'text-gray-900' : 'text-gray-500'
-              }`}>
+            <div className="flex items-center space-x-4 bg-gray-100/80 backdrop-blur-sm rounded-xl p-3 border border-gray-200/50 opacity-50 cursor-not-allowed">
+              <span className="text-sm font-medium text-gray-400">
                 Base64
               </span>
               <Switch
-                checked={transferMode === 'streaming'}
-                onChange={(checked) => onTransferModeChange(checked ? 'streaming' : 'base64')}
-                className={`${
-                  transferMode === 'streaming'
-                    ? 'bg-gradient-to-r from-ratio1-500 to-purple-500'
-                    : 'bg-gray-300'
-                }
-                relative inline-flex h-7 w-14 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ratio1-500 focus:ring-offset-2 shadow-inner`}
+                checked={true}
+                onChange={() => {}} // Disabled - no action
+                disabled={true}
+                className="bg-gray-300 relative inline-flex h-7 w-14 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 shadow-inner cursor-not-allowed"
               >
                 <span
-                  className={`${
-                    transferMode === 'streaming' ? 'translate-x-7' : 'translate-x-1'
-                  }
-                  inline-block h-5 w-5 transform rounded-full bg-white transition-all duration-300 shadow-lg`}
+                  className="inline-block h-5 w-5 transform rounded-full bg-white transition-all duration-300 shadow-lg translate-x-7"
                 />
               </Switch>
-              <span className={`text-sm font-medium transition-colors duration-200 ${
-                transferMode === 'streaming' ? 'text-gray-900' : 'text-gray-500'
-              }`}>
+              <span className="text-sm font-medium text-gray-400">
                 Streaming
               </span>
             </div>
