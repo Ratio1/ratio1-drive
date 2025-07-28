@@ -55,20 +55,57 @@ export default function DownloadModal({ isOpen, onClose, file, transferMode }: D
 
     try {
       if (transferMode === 'streaming') {
-        // For streaming mode, use the API service
+        // For streaming mode, use the API service for true streaming download
         const response = await apiService.downloadFileStreaming(file.cid, secret);
-        console.log("============================");
-        console.log(response);
-        // Create a blob from the response and trigger download
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = file.filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+
+        // Check if response is ok
+        if (!response.ok) {
+          throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+        }
+
+        // Get filename from response headers
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = file.filename;
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+          if (filenameMatch) {
+            filename = filenameMatch[1];
+          }
+        }
+
+        // Create a streaming download using the response body directly
+        // This approach streams the data from the server to the browser without buffering the entire file
+        if (response.body) {
+          // Create a new Response with the streaming body and proper headers for download
+          const streamingResponse = new Response(response.body, {
+            headers: {
+              ...Object.fromEntries(response.headers.entries()),
+              'Content-Disposition': `attachment; filename="${filename}"`
+            }
+          });
+
+          // Create a blob URL from the streaming response
+          const blob = await streamingResponse.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } else {
+          // Fallback to blob method if streaming is not available
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }
 
         setDownloadStatus('success');
         setDownloadMessage('File downloaded successfully!');

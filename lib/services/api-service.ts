@@ -62,11 +62,9 @@ class ApiService {
       method: 'GET',
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Download failed');
-    }
-
+    // For streaming downloads, we don't check response.ok here
+    // because the frontend will handle the response appropriately
+    // and streaming responses might not always be "ok" in the traditional sense
     return response;
   }
 

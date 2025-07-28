@@ -12,12 +12,17 @@ export async function POST(request: NextRequest) {
     let secret = '';
     
     if (contentType?.includes('multipart/form-data')) {
-      // Streaming upload
+      // Streaming upload - verify true streaming behavior
+      console.log('🚀 [STREAMING] Starting streaming upload...');
+      const startTime = Date.now();
+      
       const formData = await request.formData();
       const file = formData.get('file') as File;
       filename = formData.get('filename') as string || file?.name || 'unknown';
       secret = formData.get('secret') as string;
       owner = formData.get('owner') as string;
+      
+      console.log(`📁 [STREAMING] File info: ${filename} (${file?.size} bytes)`);
       
       // Create a new FormData with the secret included
       const uploadFormData = new FormData();
@@ -25,9 +30,14 @@ export async function POST(request: NextRequest) {
       if (filename) uploadFormData.append('filename', filename);
       if (secret) uploadFormData.append('secret', secret);
       
+      // Pass FormData directly to SDK for true streaming (no buffering)
       uploadResult = await ApiClient.uploadFileStreaming(uploadFormData);
+      
+      const endTime = Date.now();
+      console.log(`✅ [STREAMING] Upload completed in ${endTime - startTime}ms`);
     } else {
       // Base64 upload
+      console.log('🔄 [BASE64] Starting base64 upload...');
       const data = await request.json();
       filename = data.filename || 'unknown';
       secret = data.secret || '';

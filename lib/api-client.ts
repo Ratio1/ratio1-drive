@@ -7,8 +7,8 @@ import {
 } from './types';
 import createClient from 'ratio1-edge-node-client';
 
-const CSTORE_API_URL = process.env.CSTORE_API_URL || 'http://localhost:31234';
-const R1FS_API_URL = process.env.R1FS_API_URL || 'http://localhost:31235';
+const CSTORE_API_URL = process.env.EE_CHAINSTORE_API_URL;
+const R1FS_API_URL = process.env.EE_R1FS_API_URL;
 
 // Create the ratio1-edge-node-client instance
 const ratio1Client = createClient({

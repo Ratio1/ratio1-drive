@@ -16,6 +16,7 @@ import {
 import { useUser } from '@/lib/contexts/UserContext';
 import { useToast } from '@/lib/contexts/ToastContext';
 import { apiService } from '@/lib/services/api-service';
+import { config } from '@/lib/config';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -40,8 +41,24 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Check file size
+      const maxSizeBytes = config.MAX_FILE_SIZE_MB * 1024 * 1024; // Convert MB to bytes
+      if (file.size > maxSizeBytes) {
+        const errorMessage = `File size exceeds the maximum limit of ${config.MAX_FILE_SIZE_MB}MB`;
+        setUploadStatus('error');
+        setUploadMessage(errorMessage);
+        showToast(errorMessage, 'error');
+        // Clear the file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        setSelectedFile(null);
+        return;
+      }
+      
       setSelectedFile(file);
       setUploadStatus('idle');
+      setUploadMessage('');
     }
   };
 
@@ -137,6 +154,10 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
     setUploadMessage('');
     setIsUploading(false);
     setShowPassword(false);
+    // Clear the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     onClose();
     setUploadStep('idle');
   };
@@ -215,7 +236,7 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
             {/* File Selection */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Select File
+                Select File (Max: {config.MAX_FILE_SIZE_MB}MB)
               </label>
               <div
                 onClick={() => fileInputRef.current?.click()}
