@@ -39,7 +39,7 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
   const [showShareModal, setShowShareModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const { r1fsStatus } = useStatus();
+  const { r1fsStatus, cstoreStatus } = useStatus();
 
   const handleDownloadClick = (file: FileMetadata) => {
     setSelectedFile(file);
@@ -67,7 +67,13 @@ export default function FileList({ files, transferMode, onRefresh }: FileListPro
 
   // Get the current node's address from status
   const getCurrentNodeAddress = () => {
-    return r1fsStatus?.server_node_addr || r1fsStatus?.ee_node_address || null;
+    return (
+      r1fsStatus?.server_node_addr ||
+      r1fsStatus?.ee_node_address ||
+      cstoreStatus?.server_node_addr ||
+      cstoreStatus?.ee_node_address ||
+      null
+    );
   };
 
   // Check if a machine is the current node

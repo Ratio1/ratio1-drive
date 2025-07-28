@@ -19,7 +19,7 @@ interface StatusModalProps {
 }
 
 export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
-  const { r1fsStatus, cstoreStatus, isLoading, error, refresh } = useStatus();
+  const { r1fsStatus, cstoreStatus, isLoading, error, r1fsError, cstoreError, refresh } = useStatus();
   const [showCStore, setShowCStore] = useState(false);
 
   const renderValue = (value: any): string => {
@@ -71,21 +71,28 @@ export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
               </div>
             )}
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-                <div className="flex items-center space-x-3">
-                  <ExclamationTriangleIcon className="h-6 w-6 text-red-600 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold text-red-800">Error Loading Status</h3>
-                    <p className="text-red-700 mt-1">{error}</p>
+            {/* R1FS Status Section */}
+            <div className={`backdrop-blur-sm rounded-xl p-6 border ${
+              r1fsError ? 'bg-red-50/60 border-red-200/50' : 'bg-white/60 border-gray-200/50'
+            }`}>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                R1FS Status Data
+                {r1fsError && (
+                  <ExclamationTriangleIcon className="h-5 w-5 text-red-600 ml-2" title={r1fsError} />
+                )}
+              </h3>
+              
+              {r1fsError ? (
+                <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                  <div className="flex items-center space-x-3">
+                    <ExclamationTriangleIcon className="h-6 w-6 text-red-600 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-red-800">R1FS Service Error</h4>
+                      <p className="text-red-700 mt-1">{r1fsError}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {r1fsStatus && !isLoading && !error && (
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">R1FS Status Data</h3>
+              ) : r1fsStatus ? (
                 <div className="space-y-4">
                   {Object.entries(r1fsStatus).map(([key, value]) => key != 'result' && (
                     <div key={key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
@@ -102,44 +109,71 @@ export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-gray-500 text-center py-4">
+                  No R1FS status data available
+                </div>
+              )}
+            </div>
 
             {/* CStore Section - Collapsible */}
-            {cstoreStatus && !isLoading && !error && (
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50">
-                <button
-                  onClick={() => setShowCStore(!showCStore)}
-                  className="flex items-center justify-between w-full text-left mb-4"
-                >
-                  <h3 className="text-lg font-semibold text-gray-900">CStore Status Data</h3>
-                  {showCStore ? (
-                    <ChevronDownIcon className="h-5 w-5 text-gray-500" />
-                  ) : (
-                    <ChevronRightIcon className="h-5 w-5 text-gray-500" />
+            <div className={`backdrop-blur-sm rounded-xl p-6 border ${
+              cstoreError ? 'bg-red-50/60 border-red-200/50' : 'bg-white/60 border-gray-200/50'
+            }`}>
+              <button
+                onClick={() => setShowCStore(!showCStore)}
+                className="flex items-center justify-between w-full text-left mb-4"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  CStore Status Data
+                  {cstoreError && (
+                    <ExclamationTriangleIcon className="h-5 w-5 text-red-600 ml-2" title={cstoreError} />
                   )}
-                </button>
-                
-                {showCStore && (
-                  <div className="space-y-4">
-                    {Object.entries(cstoreStatus).map(([key, value]) => key != 'result' && (
-                      <div key={key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="font-semibold text-gray-900 text-sm bg-white px-2 py-1 rounded border">
-                            {key}
-                          </span>
-                        </div>
-                        <div className="bg-white rounded-lg p-3 border border-gray-200">
-                          <pre className="text-sm text-gray-600 whitespace-pre-wrap font-mono overflow-x-auto">
-                            {renderValue(value)}
-                          </pre>
+                </h3>
+                {showCStore ? (
+                  <ChevronDownIcon className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5 text-gray-500" />
+                )}
+              </button>
+              
+              {showCStore && (
+                <>
+                  {cstoreError ? (
+                    <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                      <div className="flex items-center space-x-3">
+                        <ExclamationTriangleIcon className="h-6 w-6 text-red-600 flex-shrink-0" />
+                        <div>
+                          <h4 className="font-semibold text-red-800">CStore Service Error</h4>
+                          <p className="text-red-700 mt-1">{cstoreError}</p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                    </div>
+                  ) : cstoreStatus ? (
+                    <div className="space-y-4">
+                      {Object.entries(cstoreStatus).map(([key, value]) => key != 'result' && (
+                        <div key={key} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-semibold text-gray-900 text-sm bg-white px-2 py-1 rounded border">
+                              {key}
+                            </span>
+                          </div>
+                          <div className="bg-white rounded-lg p-3 border border-gray-200">
+                            <pre className="text-sm text-gray-600 whitespace-pre-wrap font-mono overflow-x-auto">
+                              {renderValue(value)}
+                            </pre>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-center py-4">
+                      No CStore status data available
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
 
           {/* Enhanced Action Buttons */}
