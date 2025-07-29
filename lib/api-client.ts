@@ -28,7 +28,8 @@ console.log("🚀 [DEBUG] Initializing API clients with URLs:",{
 // Create the ratio1-edge-node-client instance
 const ratio1 = createRatio1EdgeNodeBrowserClient({
   cstoreUrl: CSTORE_API_URL,
-  r1fsUrl: R1FS_API_URL
+  r1fsUrl: R1FS_API_URL,
+  chainstorePeers: CHAINSTORE_PEERS as any
 });
 
 // CSTORE API Client using ratio1-edge-node-client
