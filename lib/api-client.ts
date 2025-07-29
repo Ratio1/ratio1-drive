@@ -5,7 +5,7 @@ import {
   CStoreHashResponse,
   ChainStoreValue
 } from './types';
-import createClient from 'ratio1-edge-node-client';
+import {createRatio1EdgeNodeBrowserClient} from 'edge-node-client/browser';
 
 // Helper function to ensure URL has proper protocol
 function ensureHttpProtocol(url: string | undefined): string | undefined {
@@ -18,13 +18,15 @@ function ensureHttpProtocol(url: string | undefined): string | undefined {
 
 const CSTORE_API_URL = ensureHttpProtocol(process.env.EE_CHAINSTORE_API_URL || process.env.CHAINSTORE_API_URL);
 const R1FS_API_URL = ensureHttpProtocol(process.env.EE_R1FS_API_URL || process.env.R1FS_API_URL);
+const CHAINSTORE_PEERS = process.env.EE_CHAINSTORE_PEERS || process.env.CHAINSTORE_PEERS;
 
 console.log("🚀 [DEBUG] Initializing API clients with URLs:",{
     CSTORE_API_URL,
     R1FS_API_URL,
+    CHAINSTORE_PEERS
 });
 // Create the ratio1-edge-node-client instance
-const ratio1Client = createClient({
+const ratio1 = createRatio1EdgeNodeBrowserClient({
   cstoreUrl: CSTORE_API_URL,
   r1fsUrl: R1FS_API_URL
 });
@@ -37,7 +39,7 @@ class CStoreApiClient {
     }
 
     try {
-      const result = await ratio1Client.cstore.getStatus();
+      const result = await ratio1.cstore.getStatus({fullResponse: true});
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] CStore status received:', result);
@@ -58,8 +60,7 @@ class CStoreApiClient {
     }
 
     try {
-      // @ts-ignore - SDK types don't match implementation
-      const result = await ratio1Client.cstore.getValue(cstore_key);
+      const result = await ratio1.cstore.getValue({key: cstore_key});
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] CStore value received:', result);
@@ -80,8 +81,7 @@ class CStoreApiClient {
     }
 
     try {
-      // @ts-ignore - SDK types don't match implementation
-      const result = await ratio1Client.cstore.setValue(cstore_key, chainstore_value);
+      const result = await ratio1.cstore.setValue({key: cstore_key, value: chainstore_value});
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] CStore setValue result:', result);
@@ -102,8 +102,7 @@ class CStoreApiClient {
     }
 
     try {
-      // @ts-ignore - SDK types don't match implementation
-      const result = await ratio1Client.cstore.hashSetValue(hkey, key, value);
+      const result = await ratio1.cstore.hset({hkey, key, value});
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] Hash setValue result:', result);
@@ -124,7 +123,7 @@ class CStoreApiClient {
     }
 
     try {
-      const result = await ratio1Client.cstore.hashGetValue({hkey, key});
+      const result = await ratio1.cstore.hget({hkey, key});
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] Hash getValue result:', result);
@@ -145,7 +144,7 @@ class CStoreApiClient {
     }
 
     try {
-      const result = await ratio1Client.cstore.hgetall({hkey});
+      const result = await ratio1.cstore.hgetall({hkey}, {fullResponse: true});
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] Hash getAllValues result:', result);
@@ -172,8 +171,7 @@ class CStoreApiClient {
 
     try {
       // The SDK doesn't have a direct hget method, so we'll use hashGetValue
-      // @ts-ignore - SDK types don't match implementation
-      const result = await ratio1Client.cstore.hashGetValue({hkey, key});
+      const result = await ratio1.cstore.hget({hkey, key});
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] Hash get result:', result);
@@ -194,8 +192,7 @@ class CStoreApiClient {
     }
 
     try {
-      // @ts-ignore - SDK types don't match implementation
-      const result = await ratio1Client.cstore.hashSetValue({hkey, key, value});
+      const result = await ratio1.cstore.hset({hkey, key, value});
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] Hash set result:', result);
@@ -226,8 +223,7 @@ class R1FSApiClient {
     }
 
     try {
-      // @ts-ignore - SDK types don't match implementation
-      const result = await ratio1Client.r1fs.getStatus();
+      const result = await ratio1.r1fs.getStatus({fullResponse: true});
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] R1FS status received:', result);
@@ -249,7 +245,7 @@ class R1FSApiClient {
 
     try {
       // The SDK expects an object with formData property
-      const result = await ratio1Client.r1fs.addFile({ formData });
+      const result = await ratio1.r1fs.addFile({ formData });
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] File upload result:', result);
@@ -271,7 +267,7 @@ class R1FSApiClient {
 
     try {
       // @ts-ignore - SDK types don't match implementation
-      const result = await ratio1Client.r1fs.addFileBase64(data);
+      const result = await ratio1.r1fs.addFileBase64(data);
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] Base64 file upload result:', result);
@@ -292,7 +288,7 @@ class R1FSApiClient {
     }
 
     try {
-      const result = await ratio1Client.r1fs.getFile({cid, secret});
+      const result = await ratio1.r1fs.getFile({cid, secret});
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] File download result received');
@@ -315,7 +311,7 @@ class R1FSApiClient {
 
     try {
       // @ts-ignore - SDK types don't match implementation
-      const result = await ratio1Client.r1fs.getFileBase64(cid, secret);
+      const result = await ratio1.r1fs.getFileBase64(cid, secret);
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] Base64 file download result received');
