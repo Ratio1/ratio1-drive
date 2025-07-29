@@ -96,6 +96,10 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
             filename: selectedFile.name,
             isEncrypted: !!secret
           });
+          // Clean up modal after successful upload
+          setTimeout(() => {
+            handleClose();
+          }, 1500);
         } else {
           throw new Error('Upload successful but no CID received');
         }
@@ -132,6 +136,10 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
             filename: selectedFile.name,
             isEncrypted: !!secret
           });
+          // Clean up modal after successful upload
+          setTimeout(() => {
+            handleClose();
+          }, 1500);
         } else {
           throw new Error('Upload successful but no CID received');
         }
@@ -152,14 +160,15 @@ export default function UploadModal({ isOpen, onClose, transferMode, onUploadSuc
     setSecret('');
     setUploadStatus('idle');
     setUploadMessage('');
+    setUploadProgress(0);
     setIsUploading(false);
     setShowPassword(false);
+    setUploadStep('idle');
     // Clear the file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
     onClose();
-    setUploadStep('idle');
   };
 
 
