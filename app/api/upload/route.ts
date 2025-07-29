@@ -59,17 +59,19 @@ export async function POST(request: NextRequest) {
       // Get current metadata array for this node
       const hashGetResult = await ApiClient.hashGet(config.HKEY, eeNodeAddress);
 
+      console.log(`🔍 [HASH GET] Existing metadata for node ${hashGetResult}`);
+
       let metadataArray: FileMetadata[] = [];
 
       // Handle different response cases
-      if (hashGetResult.result === null || hashGetResult.result === undefined) {
+      if (hashGetResult === null || hashGetResult === undefined) {
         // No existing array for this node - create new one
         console.log(`No existing metadata array found for node ${eeNodeAddress}, creating new array`);
         metadataArray = [];
       } else {
         // Try to parse existing array
         try {
-          const parsed = JSON.parse(hashGetResult.result);
+          const parsed = JSON.parse(hashGetResult);
           // Handle both old format (string array) and new format (metadata array)
           if (Array.isArray(parsed)) {
             if (typeof parsed[0] === 'string') {
