@@ -266,8 +266,7 @@ class R1FSApiClient {
     }
 
     try {
-      // @ts-ignore - SDK types don't match implementation
-      const result = await ratio1.r1fs.addFileBase64(data);
+      const result = await ratio1.r1fs.addFileBase64(data, {fullResponse: true});
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] Base64 file upload result:', result);

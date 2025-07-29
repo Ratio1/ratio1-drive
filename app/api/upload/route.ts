@@ -10,29 +10,29 @@ export async function POST(request: NextRequest) {
     let filename = '';
     let owner = '';
     let secret = '';
-    
+
     if (contentType?.includes('multipart/form-data')) {
       // Streaming upload - verify true streaming behavior
       console.log('🚀 [STREAMING] Starting streaming upload...');
       const startTime = Date.now();
-      
+
       const formData = await request.formData();
       const file = formData.get('file') as File;
       filename = formData.get('filename') as string || file?.name || 'unknown';
       secret = formData.get('secret') as string;
       owner = formData.get('owner') as string;
-      
+
       console.log(`📁 [STREAMING] File info: ${filename} (${file?.size} bytes)`);
-      
+
       // Create a new FormData with the secret included
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
       if (filename) uploadFormData.append('filename', filename);
       if (secret) uploadFormData.append('secret', secret);
-      
+
       // Pass FormData directly to SDK for true streaming (no buffering)
       uploadResult = await ApiClient.uploadFileStreaming(uploadFormData);
-      
+
       const endTime = Date.now();
       console.log(`✅ [STREAMING] Upload completed in ${endTime - startTime}ms`);
     } else {
@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
       owner = data.owner || '';
       uploadResult = await ApiClient.uploadFileBase64(data);
     }
+    console.log(`✅ [STREAMING] Upload result: ${uploadResult}`);
 
     // Extract CID and ee_node_address from upload result
     const cid = uploadResult?.result?.cid;
@@ -57,9 +58,9 @@ export async function POST(request: NextRequest) {
     try {
       // Get current metadata array for this node
       const hashGetResult = await ApiClient.hashGet(config.HKEY, eeNodeAddress);
-      
+
       let metadataArray: FileMetadata[] = [];
-      
+
       // Handle different response cases
       if (hashGetResult.result === null || hashGetResult.result === undefined) {
         // No existing array for this node - create new one
@@ -116,14 +117,14 @@ export async function POST(request: NextRequest) {
       await ApiClient.hashSet(config.HKEY, eeNodeAddress, JSON.stringify(metadataArray));
 
       console.log(`Successfully added metadata for CID ${cid} to node ${eeNodeAddress}`);
-      
+
     } catch (hashError) {
       console.error('Error updating hash store:', hashError);
       // Continue and return the upload result even if hash store update fails
     }
 
     return NextResponse.json(uploadResult);
-    
+
   } catch (error) {
     console.error('Error uploading file:', error);
     return NextResponse.json(
