@@ -25,11 +25,14 @@ console.log("🚀 [DEBUG] Initializing API clients with URLs:",{
     R1FS_API_URL,
     CHAINSTORE_PEERS
 });
+let fixed = CHAINSTORE_PEERS?.replace(/'/g, '"'); // replace single quotes with double quotes
+let parsed = JSON.parse(fixed ?? "");
+
 // Create the ratio1-edge-node-client instance
 const ratio1 = createRatio1EdgeNodeBrowserClient({
   cstoreUrl: CSTORE_API_URL,
   r1fsUrl: R1FS_API_URL,
-  chainstorePeers: CHAINSTORE_PEERS as any
+  chainstorePeers: parsed as any
 });
 
 // CSTORE API Client using ratio1-edge-node-client
