@@ -18,16 +18,24 @@ function ensureHttpProtocol(url: string | undefined): string | undefined {
 
 const CSTORE_API_URL = ensureHttpProtocol(process.env.EE_CHAINSTORE_API_URL || process.env.CHAINSTORE_API_URL);
 const R1FS_API_URL = ensureHttpProtocol(process.env.EE_R1FS_API_URL || process.env.R1FS_API_URL);
-const CHAINSTORE_PEERS = process.env.EE_CHAINSTORE_PEERS || process.env.CHAINSTORE_PEERS;
+const CHAINSTORE_PEERS = process.env.EE_CHAINSTORE_PEERS || process.env.CHAINSTORE_PEERS || "";
 
 console.log("🚀 [DEBUG] Initializing API clients with URLs:",{
     CSTORE_API_URL,
     R1FS_API_URL,
     CHAINSTORE_PEERS
 });
-let fixed = CHAINSTORE_PEERS?.replace(/'/g, '"'); // replace single quotes with double quotes
-let parsed = JSON.parse(fixed ?? "");
+let fixed = CHAINSTORE_PEERS?.replace(/'/g, '"');
+let parsed: any[] = [];
 
+if (fixed?.trim()) {
+  try {
+    parsed = JSON.parse(fixed);
+  } catch (err) {
+    console.error("❌ Failed to parse CHAINSTORE_PEERS:", fixed);
+    throw err;
+  }
+}
 // Create the ratio1-edge-node-client instance
 const ratio1 = createRatio1EdgeNodeBrowserClient({
   cstoreUrl: CSTORE_API_URL,
