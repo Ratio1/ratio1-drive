@@ -7,8 +7,17 @@ import {
 } from './types';
 import createClient from 'ratio1-edge-node-client';
 
-const CSTORE_API_URL = process.env.EE_CHAINSTORE_API_URL;
-const R1FS_API_URL = process.env.EE_R1FS_API_URL;
+// Helper function to ensure URL has proper protocol
+function ensureHttpProtocol(url: string | undefined): string | undefined {
+  if (!url) return url;
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  return `http://${url}`;
+}
+
+const CSTORE_API_URL = ensureHttpProtocol(process.env.EE_CHAINSTORE_API_URL || process.env.CHAINSTORE_API_URL);
+const R1FS_API_URL = ensureHttpProtocol(process.env.EE_R1FS_API_URL || process.env.R1FS_API_URL);
 
 console.log("🚀 [DEBUG] Initializing API clients with URLs:",{
     CSTORE_API_URL,
