@@ -245,7 +245,7 @@ class R1FSApiClient {
 
     try {
       // The SDK expects an object with formData property
-      const result = await ratio1.r1fs.addFile({ formData });
+      const result = await ratio1.r1fs.addFile({ formData }, {fullResponse: true});
 
       if (config.DEBUG) {
         console.log('✅ [DEBUG] File upload result:', result);
