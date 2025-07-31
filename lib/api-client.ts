@@ -5,7 +5,7 @@ import {
   CStoreHashResponse,
   ChainStoreValue
 } from './types';
-import {createRatio1EdgeNodeBrowserClient} from 'edge-node-client/browser';
+import {createRatio1EdgeNodeBrowserClient} from '@ratio1/edge-node-client/browser';
 
 // Helper function to ensure URL has proper protocol
 function ensureHttpProtocol(url: string | undefined): string | undefined {

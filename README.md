@@ -105,7 +105,7 @@ docker run -p 3333:3333 ratio1-drive
 
 ## API Integration
 
-The application integrates with the Ratio1 Edge Network using the `ratio1-edge-node-client` SDK:
+The application integrates with the Ratio1 Edge Network using the `@ratio1/edge-node-client` SDK:
 
 - **CStore API**: For metadata storage and file indexing
 - **R1FS API**: For file upload/download operations
@@ -134,6 +134,6 @@ ratio1-drive/
 - **React 19.1.0**: UI library
 - **TypeScript 5.8.3**: Type safety
 - **Tailwind CSS 4.1.11**: Styling
-- **ratio1-edge-node-client 0.2.2**: Ratio1 Edge Network SDK
+- **ratio1-edge-node-client 1.0.0**: Ratio1 Edge Network SDK
 - **Docker**: Containerization
 - **GitHub Actions**: CI/CD automation
