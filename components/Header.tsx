@@ -54,15 +54,6 @@ export default function Header({ transferMode, onTransferModeChange, eeId, usern
                       </span>
                     </div>
                   )}
-                  {ethAddress && (
-                    <div className="flex items-center space-x-2">
-                      <CurrencyDollarIcon className="h-4 w-4 text-green-500" />
-                      <span className="text-sm text-gray-600">ETH:</span>
-                      <span className="text-sm font-mono text-gray-800 bg-gray-100 px-2 py-1 rounded">
-                        {ethAddress.substring(0, 8)}...{ethAddress.substring(ethAddress.length - 6)}
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
