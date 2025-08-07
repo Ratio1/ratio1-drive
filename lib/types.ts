@@ -32,6 +32,7 @@ export interface CStoreBaseResponse {
 
 export interface CStoreStatusResponse extends CStoreBaseResponse {
   keys: string[];
+  chainstore_peers?: string[];
 }
 
 export interface CStoreValueResponse extends CStoreBaseResponse {

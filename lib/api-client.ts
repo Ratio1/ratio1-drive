@@ -74,7 +74,13 @@ class CStoreApiClient {
         console.log('✅ [DEBUG] CStore status received:', result);
       }
 
-      return result as unknown as CStoreStatusResponse;
+      // Add chainstore peers to the status response
+      const statusWithPeers = {
+        ...result,
+        chainstore_peers: parsed
+      };
+
+      return statusWithPeers as unknown as CStoreStatusResponse;
     } catch (error) {
       if (config.DEBUG) {
         console.error('❌ [DEBUG] CStore status error:', error);

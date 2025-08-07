@@ -19,29 +19,8 @@ interface StatusModalProps {
 }
 
 export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
-  const { r1fsStatus, cstoreStatus, isLoading, error, r1fsError, cstoreError, refresh } = useStatus();
+    const { r1fsStatus, cstoreStatus, isLoading, error, r1fsError, cstoreError, refresh } = useStatus();
   const [showCStore, setShowCStore] = useState(false);
-
-  // Get chainstore peers from the environment
-  const getChainstorePeers = (): string[] => {
-    const peers = process.env.EE_CHAINSTORE_PEERS || process.env.CHAINSTORE_PEERS || "";
-    if (!peers.trim()) return [];
-
-    try {
-      const trimmed = peers.trim();
-      let cleaned = trimmed;
-      if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
-        cleaned = trimmed.slice(1, -1);
-      }
-      cleaned = cleaned.replace(/'/g, '"');
-      return JSON.parse(cleaned);
-    } catch (err) {
-      console.error("Failed to parse chainstore peers:", err);
-      return [];
-    }
-  };
-
-  const chainstorePeers = getChainstorePeers();
 
   const renderValue = (value: any): string => {
     if (typeof value === 'object' && value !== null) {
@@ -188,18 +167,20 @@ export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
                       ))}
 
                       {/* Chainstore Peers Section */}
-                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="font-semibold text-gray-900 text-sm bg-white px-2 py-1 rounded border">
-                            chainstore_peers
-                          </span>
+                      {cstoreStatus?.chainstore_peers && (
+                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-semibold text-gray-900 text-sm bg-white px-2 py-1 rounded border">
+                              chainstore_peers
+                            </span>
+                          </div>
+                          <div className="bg-white rounded-lg p-3 border border-gray-200">
+                            <pre className="text-sm text-gray-600 whitespace-pre-wrap font-mono overflow-x-auto">
+                              {JSON.stringify(cstoreStatus.chainstore_peers, null, 2)}
+                            </pre>
+                          </div>
                         </div>
-                        <div className="bg-white rounded-lg p-3 border border-gray-200">
-                          <pre className="text-sm text-gray-600 whitespace-pre-wrap font-mono overflow-x-auto">
-                            {chainstorePeers.length > 0 ? JSON.stringify(chainstorePeers, null, 2) : '[]'}
-                          </pre>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-gray-500 text-center py-4">
