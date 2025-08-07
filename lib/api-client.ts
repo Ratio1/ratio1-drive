@@ -25,24 +25,31 @@ console.log("🚀 [DEBUG] Initializing API clients with URLs:",{
     R1FS_API_URL,
     CHAINSTORE_PEERS
 });
-let fixed = CHAINSTORE_PEERS?.replace(/'/g, '"');
+let fixed = CHAINSTORE_PEERS;
 let parsed: any[] = [];
 
 if (fixed?.trim()) {
   try {
-    // Handle case where the value is already a JSON string
     const trimmed = fixed.trim();
-    // If it starts and ends with quotes, it's a JSON string containing JSON
-    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-      // Parse the outer JSON string first, then parse the inner JSON
-      const innerJson = JSON.parse(trimmed);
-      parsed = JSON.parse(innerJson);
-    } else {
-      // Direct JSON parsing
-      parsed = JSON.parse(trimmed);
+    
+    // Remove outer single quotes if present
+    let cleaned = trimmed;
+    if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
+      cleaned = trimmed.slice(1, -1);
+    }
+    
+    // Replace any remaining single quotes with double quotes
+    cleaned = cleaned.replace(/'/g, '"');
+    
+    // Parse the JSON string to get the actual array
+    parsed = JSON.parse(cleaned);
+    
+    if (config.DEBUG) {
+      console.log('✅ [DEBUG] Successfully parsed CHAINSTORE_PEERS:', parsed);
     }
   } catch (err) {
     console.error("❌ Failed to parse CHAINSTORE_PEERS:", fixed);
+    console.error("❌ Error details:", err);
     throw err;
   }
 }
