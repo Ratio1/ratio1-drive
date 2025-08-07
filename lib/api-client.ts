@@ -26,7 +26,7 @@ console.log("🚀 [DEBUG] Initializing API clients with URLs:",{
     CHAINSTORE_PEERS
 });
 let fixed = CHAINSTORE_PEERS;
-let parsed: any[] = [];
+let parsed: string[] = [];
 
 if (fixed?.trim()) {
   try {

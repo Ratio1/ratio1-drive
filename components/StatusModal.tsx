@@ -1,8 +1,8 @@
 'use client';
 
 import { Dialog } from '@headlessui/react';
-import { 
-  XMarkIcon, 
+import {
+  XMarkIcon,
   InformationCircleIcon,
   SparklesIcon,
   ArrowPathRoundedSquareIcon,
@@ -21,6 +21,27 @@ interface StatusModalProps {
 export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
   const { r1fsStatus, cstoreStatus, isLoading, error, r1fsError, cstoreError, refresh } = useStatus();
   const [showCStore, setShowCStore] = useState(false);
+
+  // Get chainstore peers from the environment
+  const getChainstorePeers = (): string[] => {
+    const peers = process.env.EE_CHAINSTORE_PEERS || process.env.CHAINSTORE_PEERS || "";
+    if (!peers.trim()) return [];
+
+    try {
+      const trimmed = peers.trim();
+      let cleaned = trimmed;
+      if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
+        cleaned = trimmed.slice(1, -1);
+      }
+      cleaned = cleaned.replace(/'/g, '"');
+      return JSON.parse(cleaned);
+    } catch (err) {
+      console.error("Failed to parse chainstore peers:", err);
+      return [];
+    }
+  };
+
+  const chainstorePeers = getChainstorePeers();
 
   const renderValue = (value: any): string => {
     if (typeof value === 'object' && value !== null) {
@@ -81,7 +102,7 @@ export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
                   <ExclamationTriangleIcon className="h-5 w-5 text-red-600 ml-2" title={r1fsError} />
                 )}
               </h3>
-              
+
               {r1fsError ? (
                 <div className="bg-red-50 rounded-lg p-4 border border-red-200">
                   <div className="flex items-center space-x-3">
@@ -136,7 +157,7 @@ export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
                   <ChevronRightIcon className="h-5 w-5 text-gray-500" />
                 )}
               </button>
-              
+
               {showCStore && (
                 <>
                   {cstoreError ? (
@@ -165,6 +186,20 @@ export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
                           </div>
                         </div>
                       ))}
+
+                      {/* Chainstore Peers Section */}
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-semibold text-gray-900 text-sm bg-white px-2 py-1 rounded border">
+                            chainstore_peers
+                          </span>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 border border-gray-200">
+                          <pre className="text-sm text-gray-600 whitespace-pre-wrap font-mono overflow-x-auto">
+                            {chainstorePeers.length > 0 ? JSON.stringify(chainstorePeers, null, 2) : '[]'}
+                          </pre>
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-gray-500 text-center py-4">
@@ -178,9 +213,9 @@ export default function StatusModal({ isOpen, onClose }: StatusModalProps) {
 
           {/* Enhanced Action Buttons */}
           <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
-            <button 
-              onClick={refresh} 
-              className="btn-secondary flex items-center space-x-2" 
+            <button
+              onClick={refresh}
+              className="btn-secondary flex items-center space-x-2"
               disabled={isLoading}
             >
               <ArrowPathRoundedSquareIcon className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} />
