@@ -30,7 +30,17 @@ let parsed: any[] = [];
 
 if (fixed?.trim()) {
   try {
-    parsed = JSON.parse(fixed);
+    // Handle case where the value is already a JSON string
+    const trimmed = fixed.trim();
+    // If it starts and ends with quotes, it's a JSON string containing JSON
+    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+      // Parse the outer JSON string first, then parse the inner JSON
+      const innerJson = JSON.parse(trimmed);
+      parsed = JSON.parse(innerJson);
+    } else {
+      // Direct JSON parsing
+      parsed = JSON.parse(trimmed);
+    }
   } catch (err) {
     console.error("❌ Failed to parse CHAINSTORE_PEERS:", fixed);
     throw err;
